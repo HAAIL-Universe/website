@@ -77,17 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ===== Feedback Form → Google Sheets =====
+  // ===== Feedback Form → Google Sheets (button-based, no form submit) =====
   const fbForm = document.getElementById('feedback-form');
   const fbStatus = document.getElementById('feedback-status');
+  const fbButton = document.getElementById('feedback-submit');
 
-  if (fbForm && fbStatus) {
+  if (fbForm && fbStatus && fbButton) {
     console.log('Feedback form wiring active');
     const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyvYzXwdmGs3xZxVUHuJLrzMZvZ3rTj9hHE7Tu-NOaPN_oTtN93lcnQ6DFxUcX2BnxlWA/exec';
 
-    fbForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
+    fbButton.addEventListener('click', async () => {
       fbStatus.textContent = 'Sending…';
 
       const payload = {
@@ -99,6 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pagePath: window.location.pathname,
         userAgent: navigator.userAgent
       };
+
+      // Basic client-side guard
+      if (!payload.feedback.trim()) {
+        fbStatus.textContent = 'Please add some feedback before submitting.';
+        return;
+      }
 
       try {
         const res = await fetch(FEEDBACK_URL, {

@@ -55,8 +55,8 @@
 
           <h2>Feedback Form</h2>
 
-          <!-- NOTE: no method/action; JS handles submission -->
-          <form id="feedback-form" novalidate>
+          <!-- JS-only submission: no HTTP POST -->
+          <form id="feedback-form" onsubmit="return false;" novalidate>
             <label for="fb-name">Name (optional)</label>
             <input id="fb-name" type="text" />
 
@@ -77,7 +77,7 @@
             </select>
 
             <div style="margin-top:1rem;">
-              <button class="btn" type="submit">Submit feedback</button>
+              <button class="btn" id="feedback-submit" type="button">Submit feedback</button>
             </div>
           </form>
 
