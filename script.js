@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('SpiritBrew script loaded');
+
   // ===== Nav toggle =====
   const navToggle = document.querySelector('[data-nav-toggle]');
   const nav = document.querySelector('[data-nav]');
@@ -57,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const reply = data.reply || data.answer || 'SpiritGuide is thinking in the background…';
         appendMessage(reply, 'bot');
       } catch (err) {
-        // Safe fallback while backend isn’t live yet
         appendMessage(
           "Prototype reply: your question has been logged. Once the live SpiritGuide backend is connected, I'll answer using real data from SpiritBrew and its docs.",
           'bot'
@@ -81,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fbStatus = document.getElementById('feedback-status');
 
   if (fbForm && fbStatus) {
+    console.log('Feedback form wiring active');
     const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyvYzXwdmGs3xZxVUHuJLrzMZvZ3rTj9hHE7Tu-NOaPN_oTtN93lcnQ6DFxUcX2BnxlWA/exec';
 
     fbForm.addEventListener('submit', async (e) => {
@@ -118,5 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fbStatus.textContent = 'Sorry, something went wrong. Please try again later.';
       }
     });
+  } else {
+    console.log('Feedback form not present on this page');
   }
 });
