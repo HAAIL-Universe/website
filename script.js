@@ -12,65 +12,111 @@ document.addEventListener('DOMContentLoaded', () => {
   const launcher = document.getElementById('sg-launcher');
   const widget = document.getElementById('sg-widget');
   const closeBtn = document.getElementById('sg-close');
-  const form = document.getElementById('sg-form');
-  const input = document.getElementById('sg-input');
+  const sgForm = document.getElementById('sg-form');
+  const sgInput = document.getElementById('sg-input');
   const messages = document.getElementById('sg-messages');
 
-  if (!launcher || !widget || !form || !input || !messages) return;
-
-  function toggleWidget(open) {
-    const shouldOpen = typeof open === 'boolean' ? open : !widget.classList.contains('open');
-    if (shouldOpen) {
-      widget.classList.add('open');
-      input.focus();
-    } else {
-      widget.classList.remove('open');
+  if (launcher && widget && closeBtn && sgForm && sgInput && messages) {
+    function toggleWidget(open) {
+      const shouldOpen = typeof open === 'boolean'
+        ? open
+        : !widget.classList.contains('open');
+      if (shouldOpen) {
+        widget.classList.add('open');
+        sgInput.focus();
+      } else {
+        widget.classList.remove('open');
+      }
     }
-  }
 
-  launcher.addEventListener('click', () => toggleWidget(true));
-  closeBtn.addEventListener('click', () => toggleWidget(false));
+    launcher.addEventListener('click', () => toggleWidget(true));
+    closeBtn.addEventListener('click', () => toggleWidget(false));
 
-  function appendMessage(text, role) {
-    const div = document.createElement('div');
-    div.className = `sg-message ${role}`;
-    div.textContent = text;
-    messages.appendChild(div);
-    messages.scrollTop = messages.scrollHeight;
-  }
-
-  async function sendToBackend(userText) {
-    // TODO: replace with your real FastAPI endpoint when ready
-    const endpoint = 'https://your-api-here.example.com/spiritguide/chat';
-
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText })
-      });
-
-      if (!res.ok) throw new Error('Bad status: ' + res.status);
-
-      const data = await res.json();
-      const reply = data.reply || data.answer || 'SpiritGuide is thinking in the background…';
-      appendMessage(reply, 'bot');
-    } catch (err) {
-      // Safe fallback while backend isn’t live yet
-      appendMessage(
-        "Prototype reply: your question has been logged. Once the live SpiritGuide backend is connected, I'll answer using real data from SpiritBrew and its docs.",
-        'bot'
-      );
-      console.warn('SpiritGuide backend not reachable yet:', err);
+    function appendMessage(text, role) {
+      const div = document.createElement('div');
+      div.className = `sg-message ${role}`;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
     }
+
+    async function sendToBackend(userText) {
+      // TODO: replace with your real FastAPI endpoint when ready
+      const endpoint = 'https://your-api-here.example.com/spiritguide/chat';
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText })
+        });
+
+        if (!res.ok) throw new Error('Bad status: ' + res.status);
+
+        const data = await res.json();
+        const reply = data.reply || data.answer || 'SpiritGuide is thinking in the background…';
+        appendMessage(reply, 'bot');
+      } catch (err) {
+        // Safe fallback while backend isn’t live yet
+        appendMessage(
+          "Prototype reply: your question has been logged. Once the live SpiritGuide backend is connected, I'll answer using real data from SpiritBrew and its docs.",
+          'bot'
+        );
+        console.warn('SpiritGuide backend not reachable yet:', err);
+      }
+    }
+
+    sgForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = (sgInput.value || '').trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      sgInput.value = '';
+      sendToBackend(text);
+    });
   }
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const text = (input.value || '').trim();
-    if (!text) return;
-    appendMessage(text, 'user');
-    input.value = '';
-    sendToBackend(text);
-  });
+  // ===== Feedback Form → Google Sheets =====
+  const fbForm = document.getElementById('feedback-form');
+  const fbStatus = document.getElementById('feedback-status');
+
+  if (fbForm && fbStatus) {
+    const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbyvYzXwdmGs3xZxVUHuJLrzMZvZ3rTj9hHE7Tu-NOaPN_oTtN93lcnQ6DFxUcX2BnxlWA/exec';
+
+    fbForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      fbStatus.textContent = 'Sending…';
+
+      const payload = {
+        name: document.getElementById('fb-name')?.value || '',
+        email: document.getElementById('fb-email')?.value || '',
+        howTried: document.getElementById('fb-how')?.value || '',
+        feedback: document.getElementById('fb-feedback')?.value || '',
+        permission: document.getElementById('fb-permission')?.value || '',
+        pagePath: window.location.pathname,
+        userAgent: navigator.userAgent
+      };
+
+      try {
+        const res = await fetch(FEEDBACK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+          fbStatus.textContent = 'Thank you — your feedback has been recorded.';
+          fbForm.reset();
+        } else {
+          throw new Error(data.error || 'Unknown error');
+        }
+      } catch (err) {
+        console.error('Feedback submit failed:', err);
+        fbStatus.textContent = 'Sorry, something went wrong. Please try again later.';
+      }
+    });
+  }
 });
