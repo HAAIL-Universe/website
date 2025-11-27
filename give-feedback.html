@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Give Feedback — SpiritBrew</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Share your feedback on SpiritBrew — help shape future drinks, packaging, and experiences." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="container site-header-inner">
+        <a href="index.html" class="brand">
+          <span class="brand-title">SPIRITBREW</span>
+          <span class="brand-tagline">Luxium RTD Coffee. Alcohol?.. Optional!</span>
+        </a>
+
+        <button class="nav-toggle" type="button" data-nav-toggle>
+          Menu
+        </button>
+
+        <nav class="nav" data-nav>
+          <a href="wholesale-enquiry.html">Wholesale Enquiry Page</a>
+          <a href="innovation-intent.html">Innovation &amp; Intent</a>
+          <a href="give-feedback.html">Give Feedback</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container section-narrow">
+          <div class="hero-kicker">Community</div>
+          <h1 class="hero-title">Spirit Brew Feedback</h1>
+          <p class="lead">
+            We want to hear from you.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container section-narrow">
+          <h2>We Want to Hear From You!</h2>
+          <p>
+            Your feedback is essential to help us craft the best possible Spirit Brew experience.
+            Whether you’re sampling our drinks in-store or testing new recipes, your thoughts, ideas,
+            and honest opinions shape our future products and innovations.
+          </p>
+          <p>
+            Please take a moment to share your thoughts below — your input means the world to us.
+          </p>
+
+          <h2>Feedback Form</h2>
+          <!-- You can wire this up to Formspree, Netlify Forms, or your own backend -->
+          <form method="post" action="#">
+            <label for="name">Name (optional)</label>
+            <input id="name" name="name" type="text" />
+
+            <label for="email">Email (optional)</label>
+            <input id="email" name="email" type="email" />
+
+            <label for="experience">How did you try SpiritBrew?</label>
+            <input id="experience" name="experience" type="text" placeholder="e.g. Farm shop sample, home test, café pour-over, etc." />
+
+            <label for="feedback">Your feedback</label>
+            <textarea id="feedback" name="feedback" required></textarea>
+
+            <label for="permission">Can we feature your feedback as a testimonial?</label>
+            <select id="permission" name="permission">
+              <option value="yes">Yes, with my first name</option>
+              <option value="anonymous">Yes, but anonymous</option>
+              <option value="no">No, keep it private</option>
+            </select>
+
+            <div style="margin-top:1rem;">
+              <button class="btn" type="submit">Submit feedback</button>
+            </div>
+          </form>
+
+          <h2 style="margin-top:2rem;">Thank You!</h2>
+          <p>
+            Thank you for helping us make SpiritBrew better.
+            Selected feedback may be featured on our website or social channels (with permission).
+          </p>
+
+          <h3>How We Use Your Feedback</h3>
+          <p>
+            All feedback collected helps us improve our recipes, packaging, and customer experience.
+            If you choose to provide your email, we may follow up to learn more or share updates about your suggestions.
+            If you select anonymous feedback, your name will not be displayed publicly or linked to your comments.
+          </p>
+          <p>
+            Your data will be treated with care and used solely for SpiritBrew purposes.
+          </p>
+
+          <h3>Testimonials</h3>
+          <p>
+            Our community’s voices will be here soon. Stay tuned!
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer-inner">
+        <div class="footer-meta">
+          <span>julius@spiritbrew.co.uk</span>
+          <span>Based in Somerset, UK</span>
+          <span>☕ Coming soon to select stockists</span>
+        </div>
+        <div class="footer-meta">
+          <span>SpiritBrew®</span>
+          <span>Crafted in the UK</span>
+          <span>Luxium RTD Coffee. Alcohol?.. Optional!</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
