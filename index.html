@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>3-Ticker Counter</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; padding: 20px; max-width: 900px; }
+    h1 { margin: 0 0 14px; font-size: 20px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .card {
+      border: 1px solid #ddd; border-radius: 10px; padding: 14px;
+      flex: 1 1 240px; min-width: 240px;
+    }
+    .btn {
+      width: 100%; padding: 14px 12px; font-size: 16px; border-radius: 10px;
+      border: 1px solid #222; background: #111; color: #fff; cursor: pointer;
+    }
+    .btn:active { transform: translateY(1px); }
+    .meta { margin-top: 10px; color: #555; font-size: 13px; display: grid; gap: 4px; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 18px; }
+    .toolbar button {
+      padding: 10px 12px; border-radius: 10px; border: 1px solid #bbb;
+      background: #fafafa; cursor: pointer;
+    }
+    .toolbar button.danger { border-color: #c33; color: #c33; background: #fff5f5; }
+    .grid { display: grid; gap: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #fafafa; position: sticky; top: 0; }
+    .small { font-size: 12px; color: #666; }
+    .pill { display: inline-block; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }
+    input[type="text"] { padding: 10px 12px; border-radius: 10px; border: 1px solid #bbb; width: 100%; }
+    details { border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; }
+    summary { cursor: pointer; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>3-Ticker Counter</h1>
+  <div class="small">Local-only (localStorage). Daily totals are the source of truth; week/month are computed.</div>
+
+  <div class="toolbar">
+    <button id="viewDay">Today</button>
+    <button id="viewWeek">This week</button>
+    <button id="viewMonth">This month</button>
+    <button id="exportBtn">Export JSON</button>
+    <button id="importBtn">Import JSON</button>
+    <button id="resetTodayBtn" class="danger">Reset today</button>
+    <button id="wipeAllBtn" class="danger">Wipe all data</button>
+  </div>
+
+  <div class="row" id="cards"></div>
+
+  <div class="grid" style="margin-top:18px;">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+        <div>
+          <div style="font-weight:700;">Rollup</div>
+          <div class="small" id="rollupLabel">—</div>
+        </div>
+        <div class="pill" id="totalPill">Total: 0</div>
+      </div>
+      <div style="margin-top:10px; overflow:auto; max-height: 45vh;">
+        <table>
+          <thead>
+            <tr>
+              <th>Bucket</th>
+              <th id="t1Head">Ticker 1</th>
+              <th id="t2Head">Ticker 2</th>
+              <th id="t3Head">Ticker 3</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="rollupBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <details>
+      <summary>Rename tickers</summary>
+      <div style="display:grid;gap:10px;margin-top:10px;">
+        <label>Ticker 1 name <input id="name1" type="text" placeholder="Ticker 1" /></label>
+        <label>Ticker 2 name <input id="name2" type="text" placeholder="Ticker 2" /></label>
+        <label>Ticker 3 name <input id="name3" type="text" placeholder="Ticker 3" /></label>
+        <button id="saveNamesBtn">Save names</button>
+      </div>
+    </details>
+  </div>
+
+  <input id="fileInput" type="file" accept="application/json" style="display:none" />
+
+<script>
+(() => {
+  // ---------- Config ----------
+  const STORAGE_KEY = "three_ticker_counter_v1";
+
+  const defaultState = () => ({
+    names: ["Ticker 1", "Ticker 2", "Ticker 3"],
+    // daily: { "YYYY-MM-DD": [c1,c2,c3] }
+    daily: {}
+  });
+
+  // ---------- State helpers ----------
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      // minimal validation
+      if (!parsed || typeof parsed !== "object") return defaultState();
+      if (!Array.isArray(parsed.names) || parsed.names.length !== 3) parsed.names = defaultState().names;
+      if (!parsed.daily || typeof parsed.daily !== "object") parsed.daily = {};
+      return parsed;
+    } catch {
+      return defaultState();
+    }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function todayKey(d = new Date()) {
+    // local date YYYY-MM-DD
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function ensureDay(key) {
+    if (!state.daily[key]) state.daily[key] = [0,0,0];
+  }
+
+  function inc(tickerIdx) {
+    const key = todayKey();
+    ensureDay(key);
+    state.daily[key][tickerIdx] += 1;
+    saveState();
+    render();
+  }
+
+  function resetToday() {
+    const key = todayKey();
+    ensureDay(key);
+    state.daily[key] = [0,0,0];
+    saveState();
+    render();
+  }
+
+  function wipeAll() {
+    state = defaultState();
+    saveState();
+    render();
+  }
+
+  // ---------- ISO week helpers (Mon–Sun) ----------
+  function isoWeekKey(date) {
+    // returns like "2026-W03"
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    // Thursday in current week decides the year
+    const dayNum = d.getUTCDay() || 7; // Mon=1..Sun=7
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const yyyy = d.getUTCFullYear();
+    return `${yyyy}-W${String(weekNo).padStart(2,"0")}`;
+  }
+
+  function monthKey(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    return `${yyyy}-${mm}`;
+  }
+
+  function parseDayKey(key) {
+    // key = YYYY-MM-DD in local time; construct Date safely
+    const [y,m,d] = key.split("-").map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  // ---------- Rollups ----------
+  function rollup(mode) {
+    // mode: "day" | "week" | "month"
+    // returns array of rows: { bucket, counts:[...], total }
+    const rowsMap = new Map();
+
+    const keys = Object.keys(state.daily).sort(); // oldest -> newest
+    for (const day of keys) {
+      const counts = state.daily[day];
+      if (!Array.isArray(counts) || counts.length !== 3) continue;
+
+      const date = parseDayKey(day);
+      let bucket;
+      if (mode === "day") bucket = day;
+      else if (mode === "week") bucket = isoWeekKey(date);
+      else bucket = monthKey(date);
+
+      if (!rowsMap.has(bucket)) rowsMap.set(bucket, [0,0,0]);
+      const agg = rowsMap.get(bucket);
+      agg[0] += counts[0]; agg[1] += counts[1]; agg[2] += counts[2];
+    }
+
+    // Convert to rows, newest first for readability
+    const rows = Array.from(rowsMap.entries())
+      .map(([bucket, counts]) => ({
+        bucket,
+        counts,
+        total: counts[0] + counts[1] + counts[2]
+      }))
+      .sort((a,b) => (a.bucket < b.bucket ? 1 : -1));
+
+    return rows;
+  }
+
+  function currentBucketFilter(mode) {
+    const now = new Date();
+    if (mode === "day") return todayKey(now);
+    if (mode === "week") return isoWeekKey(now);
+    return monthKey(now);
+  }
+
+  function rollupForCurrent(mode) {
+    const bucket = currentBucketFilter(mode);
+    const all = rollup(mode);
+    return all.filter(r => r.bucket === bucket);
+  }
+
+  // ---------- UI ----------
+  const cardsEl = document.getElementById("cards");
+  const rollupBody = document.getElementById("rollupBody");
+  const rollupLabel = document.getElementById("rollupLabel");
+  const totalPill = document.getElementById("totalPill");
+
+  const t1Head = document.getElementById("t1Head");
+  const t2Head = document.getElementById("t2Head");
+  const t3Head = document.getElementById("t3Head");
+
+  const viewDay = document.getElementById("viewDay");
+  const viewWeek = document.getElementById("viewWeek");
+  const viewMonth = document.getElementById("viewMonth");
+
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const fileInput = document.getElementById("fileInput");
+
+  const resetTodayBtn = document.getElementById("resetTodayBtn");
+  const wipeAllBtn = document.getElementById("wipeAllBtn");
+
+  const name1 = document.getElementById("name1");
+  const name2 = document.getElementById("name2");
+  const name3 = document.getElementById("name3");
+  const saveNamesBtn = document.getElementById("saveNamesBtn");
+
+  let state = loadState();
+  let mode = "day"; // default view mode
+
+  function renderCards() {
+    const key = todayKey();
+    ensureDay(key);
+    const todays = state.daily[key];
+
+    cardsEl.innerHTML = "";
+    state.names.forEach((label, idx) => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <button class="btn" id="btn-${idx}">${label}</button>
+        <div class="meta">
+          <div><b>Today:</b> <span id="today-${idx}">${todays[idx]}</span></div>
+          <div class="small">Date: ${key}</div>
+        </div>
+      `;
+      cardsEl.appendChild(card);
+      card.querySelector(`#btn-${idx}`).addEventListener("click", () => inc(idx));
+    });
+  }
+
+  function renderHeaders() {
+    t1Head.textContent = state.names[0];
+    t2Head.textContent = state.names[1];
+    t3Head.textContent = state.names[2];
+
+    name1.value = state.names[0];
+    name2.value = state.names[1];
+    name3.value = state.names[2];
+  }
+
+  function renderRollup() {
+    const pretty =
+      mode === "day" ? "Today (daily buckets)" :
+      mode === "week" ? "This week (ISO week buckets)" :
+      "This month (month buckets)";
+
+    rollupLabel.textContent = pretty;
+
+    const rows = rollupForCurrent(mode);
+    const allRows = rollup(mode); // for total pill across all time? keep it current bucket only for clarity
+
+    // Show only current bucket rows (one row), but keep table structure
+    rollupBody.innerHTML = "";
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="small">No data yet.</td>`;
+      rollupBody.appendChild(tr);
+      totalPill.textContent = "Total: 0";
+      return;
+    }
+
+    const r = rows[0];
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${r.bucket}</b></td>
+      <td>${r.counts[0]}</td>
+      <td>${r.counts[1]}</td>
+      <td>${r.counts[2]}</td>
+      <td><b>${r.total}</b></td>
+    `;
+    rollupBody.appendChild(tr);
+    totalPill.textContent = `Total: ${r.total}`;
+  }
+
+  function setMode(next) {
+    mode = next;
+    renderRollup();
+  }
+
+  function render() {
+    renderHeaders();
+    renderCards();
+    renderRollup();
+  }
+
+  // ---------- Export / Import ----------
+  function downloadJSON(filename, obj) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  exportBtn.addEventListener("click", () => {
+    const fname = `3-ticker-counter-${todayKey()}.json`;
+    downloadJSON(fname, state);
+  });
+
+  importBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const incoming = JSON.parse(text);
+
+      // merge safely: keep only expected structure
+      const merged = defaultState();
+      if (Array.isArray(incoming.names) && incoming.names.length === 3) merged.names = incoming.names.map(String);
+      if (incoming.daily && typeof incoming.daily === "object") merged.daily = incoming.daily;
+
+      state = merged;
+      saveState();
+      render();
+      alert("Import complete.");
+    } catch (err) {
+      alert("Import failed: invalid JSON.");
+    } finally {
+      fileInput.value = "";
+    }
+  });
+
+  // ---------- Buttons ----------
+  viewDay.addEventListener("click", () => setMode("day"));
+  viewWeek.addEventListener("click", () => setMode("week"));
+  viewMonth.addEventListener("click", () => setMode("month"));
+
+  resetTodayBtn.addEventListener("click", () => {
+    if (confirm("Reset today's counts to zero?")) resetToday();
+  });
+
+  wipeAllBtn.addEventListener("click", () => {
+    if (confirm("Wipe ALL data (cannot be undone)?")) wipeAll();
+  });
+
+  saveNamesBtn.addEventListener("click", () => {
+    state.names = [name1.value || "Ticker 1", name2.value || "Ticker 2", name3.value || "Ticker 3"];
+    saveState();
+    render();
+  });
+
+  // Initial
+  saveState();
+  render();
+})();
+</script>
+</body>
+</html>
