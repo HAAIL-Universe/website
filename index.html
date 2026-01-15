@@ -1,403 +1,512 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>3-Ticker Counter</title>
-  <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; padding: 20px; max-width: 900px; }
-    h1 { margin: 0 0 14px; font-size: 20px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .card {
-      border: 1px solid #ddd; border-radius: 10px; padding: 14px;
-      flex: 1 1 240px; min-width: 240px;
-    }
-    .btn {
-      width: 100%; padding: 14px 12px; font-size: 16px; border-radius: 10px;
-      border: 1px solid #222; background: #111; color: #fff; cursor: pointer;
-    }
-    .btn:active { transform: translateY(1px); }
-    .meta { margin-top: 10px; color: #555; font-size: 13px; display: grid; gap: 4px; }
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 18px; }
-    .toolbar button {
-      padding: 10px 12px; border-radius: 10px; border: 1px solid #bbb;
-      background: #fafafa; cursor: pointer;
-    }
-    .toolbar button.danger { border-color: #c33; color: #c33; background: #fff5f5; }
-    .grid { display: grid; gap: 12px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-    th { background: #fafafa; position: sticky; top: 0; }
-    .small { font-size: 12px; color: #666; }
-    .pill { display: inline-block; padding: 2px 8px; border: 1px solid #ddd; border-radius: 999px; }
-    input[type="text"] { padding: 10px 12px; border-radius: 10px; border: 1px solid #bbb; width: 100%; }
-    details { border: 1px solid #eee; border-radius: 10px; padding: 10px 12px; }
-    summary { cursor: pointer; font-weight: 600; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rollup</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --bg-light: #f8f9fa;
+            --border: #e0e0e0;
+            --pos-bg: #e6fffa;
+            --pos-text: #047857;
+            --neg-bg: #fff5f5;
+            --neg-text: #c53030;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 16px; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto; color: #333; }
+        
+        /* Layout */
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+        button { 
+            background: white; border: 1px solid #ccc; border-radius: 8px;
+            padding: 0; min-height: 52px; font-size: 16px; font-weight: 600; 
+            cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: background 0.1s, transform 0.05s;
+        }
+        button:active { background: #f0f0f0; transform: scale(0.98); }
+
+        /* Rollup Section */
+        #rollup { margin-top: 20px; }
+        .header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+        .header-row h2 { margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        
+        /* Pills & Target Input */
+        .right-clump { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .target-wrapper { display: flex; align-items: center; gap: 6px; font-size: 14px; background: var(--bg-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .target-wrapper input { width: 50px; border: none; background: transparent; font-weight: 600; text-align: right; font-size: 14px; outline: none; }
+        
+        .pill { background: #e9ecef; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; white-space: nowrap; min-width: 40px; text-align: center; }
+
+        /* Weekly Metrics */
+        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .metric-tile { 
+            background: white; border: 1px solid var(--border); border-radius: 8px; 
+            padding: 8px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .metric-val { font-weight: 700; font-size: 16px; line-height: 1.2; }
+        .metric-label { font-size: 10px; text-transform: uppercase; color: #6c757d; margin-top: 2px; }
+        .metric-neg { color: var(--neg-text); }
+        .metric-pos { color: var(--pos-text); }
+
+        /* Weekly Strip */
+        #weekStrip { 
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
+            margin-bottom: 16px; 
+        }
+        .week-box {
+            border: 1px solid var(--border); border-radius: 6px;
+            padding: 4px; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 48px; background: white;
+            transition: background-color 0.2s;
+        }
+        .week-box.today { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); z-index: 1; }
+        .week-day { font-size: 10px; text-transform: uppercase; color: #666; margin-bottom: 2px; }
+        .week-val { font-size: 14px; font-weight: 700; line-height: 1.2; }
+        .wb-pos .week-val { color: var(--pos-text); }
+        .wb-pos { background-color: var(--pos-bg); }
+        .wb-neg .week-val { color: var(--neg-text); }
+        .wb-neg { background-color: var(--neg-bg); }
+        
+        /* Table */
+        .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--bg-light); font-weight: 600; text-align: right; white-space: nowrap;}
+        th:first-child, td:first-child { text-align: left; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Delta Column */
+        .delta-cell { font-weight: 600; }
+        .row-pos .delta-cell { color: var(--pos-text); }
+        .row-pos { background-color: var(--pos-bg); }
+        .row-neg .delta-cell { color: var(--neg-text); }
+        .row-neg { background-color: var(--neg-bg); }
+        .hidden { display: none; }
+
+        /* Settings Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+        .modal-overlay.open { display: flex; }
+        .modal-card { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .modal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .modal-row label { width: 60px; font-weight: 600; font-size: 14px; }
+        .modal-inputs { flex: 1; display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+        .modal-inputs input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .btn-link { background: none; border: none; font-size: 12px; color: #6c757d; cursor: pointer; text-decoration: underline; margin-right: auto; padding: 0; min-height: auto; box-shadow: none; font-weight: normal; }
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; min-height: auto; }
+        .btn-secondary { background: #e9ecef; border: none; padding: 8px 16px; border-radius: 6px; min-height: auto; }
+
+        @media (max-width: 375px) {
+            .controls { gap: 8px; }
+            button { font-size: 14px; }
+            .metrics-row { grid-template-columns: repeat(2, 1fr); }
+            body { padding: 12px; }
+            .modal-row { flex-direction: column; align-items: stretch; }
+            .modal-row label { width: auto; margin-bottom: 4px; }
+        }
+    </style>
 </head>
 <body>
-  <h1>3-Ticker Counter</h1>
-  <div class="small">Local-only (localStorage). Daily totals are the source of truth; week/month are computed.</div>
 
-  <div class="toolbar">
-    <button id="viewDay">Today</button>
-    <button id="viewWeek">This week</button>
-    <button id="viewMonth">This month</button>
-    <button id="exportBtn">Export JSON</button>
-    <button id="importBtn">Import JSON</button>
-    <button id="resetTodayBtn" class="danger">Reset today</button>
-    <button id="wipeAllBtn" class="danger">Wipe all data</button>
-  </div>
-
-  <div class="row" id="cards"></div>
-
-  <div class="grid" style="margin-top:18px;">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
-        <div>
-          <div style="font-weight:700;">Rollup</div>
-          <div class="small" id="rollupLabel">—</div>
-        </div>
-        <div class="pill" id="totalPill">Total: 0</div>
-      </div>
-      <div style="margin-top:10px; overflow:auto; max-height: 45vh;">
-        <table>
-          <thead>
-            <tr>
-              <th>Bucket</th>
-              <th id="t1Head">Ticker 1</th>
-              <th id="t2Head">Ticker 2</th>
-              <th id="t3Head">Ticker 3</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="rollupBody"></tbody>
-        </table>
-      </div>
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+        <button onclick="openSettings()" style="min-height: auto; max-width: 40px; border: none; box-shadow: none; font-size: 20px; color: #999; padding: 0;">⚙︎</button>
     </div>
 
-    <details>
-      <summary>Rename tickers</summary>
-      <div style="display:grid;gap:10px;margin-top:10px;">
-        <label>Ticker 1 name <input id="name1" type="text" placeholder="Ticker 1" /></label>
-        <label>Ticker 2 name <input id="name2" type="text" placeholder="Ticker 2" /></label>
-        <label>Ticker 3 name <input id="name3" type="text" placeholder="Ticker 3" /></label>
-        <button id="saveNamesBtn">Save names</button>
-      </div>
-    </details>
-  </div>
+    <div class="controls">
+        <button id="btn0" onclick="addCount(0)">Ticker 1</button>
+        <button id="btn1" onclick="addCount(1)">Ticker 2</button>
+        <button id="btn2" onclick="addCount(2)">Ticker 3</button>
+    </div>
 
-  <input id="fileInput" type="file" accept="application/json" style="display:none" />
-
-<script>
-(() => {
-  // ---------- Config ----------
-  const STORAGE_KEY = "three_ticker_counter_v1";
-
-  const defaultState = () => ({
-    names: ["Ticker 1", "Ticker 2", "Ticker 3"],
-    // daily: { "YYYY-MM-DD": [c1,c2,c3] }
-    daily: {}
-  });
-
-  // ---------- State helpers ----------
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return defaultState();
-      const parsed = JSON.parse(raw);
-      // minimal validation
-      if (!parsed || typeof parsed !== "object") return defaultState();
-      if (!Array.isArray(parsed.names) || parsed.names.length !== 3) parsed.names = defaultState().names;
-      if (!parsed.daily || typeof parsed.daily !== "object") parsed.daily = {};
-      return parsed;
-    } catch {
-      return defaultState();
-    }
-  }
-
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  function todayKey(d = new Date()) {
-    // local date YYYY-MM-DD
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function ensureDay(key) {
-    if (!state.daily[key]) state.daily[key] = [0,0,0];
-  }
-
-  function inc(tickerIdx) {
-    const key = todayKey();
-    ensureDay(key);
-    state.daily[key][tickerIdx] += 1;
-    saveState();
-    render();
-  }
-
-  function resetToday() {
-    const key = todayKey();
-    ensureDay(key);
-    state.daily[key] = [0,0,0];
-    saveState();
-    render();
-  }
-
-  function wipeAll() {
-    state = defaultState();
-    saveState();
-    render();
-  }
-
-  // ---------- ISO week helpers (Mon–Sun) ----------
-  function isoWeekKey(date) {
-    // returns like "2026-W03"
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    // Thursday in current week decides the year
-    const dayNum = d.getUTCDay() || 7; // Mon=1..Sun=7
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    const yyyy = d.getUTCFullYear();
-    return `${yyyy}-W${String(weekNo).padStart(2,"0")}`;
-  }
-
-  function monthKey(date) {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    return `${yyyy}-${mm}`;
-  }
-
-  function parseDayKey(key) {
-    // key = YYYY-MM-DD in local time; construct Date safely
-    const [y,m,d] = key.split("-").map(Number);
-    return new Date(y, m-1, d);
-  }
-
-  // ---------- Rollups ----------
-  function rollup(mode) {
-    // mode: "day" | "week" | "month"
-    // returns array of rows: { bucket, counts:[...], total }
-    const rowsMap = new Map();
-
-    const keys = Object.keys(state.daily).sort(); // oldest -> newest
-    for (const day of keys) {
-      const counts = state.daily[day];
-      if (!Array.isArray(counts) || counts.length !== 3) continue;
-
-      const date = parseDayKey(day);
-      let bucket;
-      if (mode === "day") bucket = day;
-      else if (mode === "week") bucket = isoWeekKey(date);
-      else bucket = monthKey(date);
-
-      if (!rowsMap.has(bucket)) rowsMap.set(bucket, [0,0,0]);
-      const agg = rowsMap.get(bucket);
-      agg[0] += counts[0]; agg[1] += counts[1]; agg[2] += counts[2];
-    }
-
-    // Convert to rows, newest first for readability
-    const rows = Array.from(rowsMap.entries())
-      .map(([bucket, counts]) => ({
-        bucket,
-        counts,
-        total: counts[0] + counts[1] + counts[2]
-      }))
-      .sort((a,b) => (a.bucket < b.bucket ? 1 : -1));
-
-    return rows;
-  }
-
-  function currentBucketFilter(mode) {
-    const now = new Date();
-    if (mode === "day") return todayKey(now);
-    if (mode === "week") return isoWeekKey(now);
-    return monthKey(now);
-  }
-
-  function rollupForCurrent(mode) {
-    const bucket = currentBucketFilter(mode);
-    const all = rollup(mode);
-    return all.filter(r => r.bucket === bucket);
-  }
-
-  // ---------- UI ----------
-  const cardsEl = document.getElementById("cards");
-  const rollupBody = document.getElementById("rollupBody");
-  const rollupLabel = document.getElementById("rollupLabel");
-  const totalPill = document.getElementById("totalPill");
-
-  const t1Head = document.getElementById("t1Head");
-  const t2Head = document.getElementById("t2Head");
-  const t3Head = document.getElementById("t3Head");
-
-  const viewDay = document.getElementById("viewDay");
-  const viewWeek = document.getElementById("viewWeek");
-  const viewMonth = document.getElementById("viewMonth");
-
-  const exportBtn = document.getElementById("exportBtn");
-  const importBtn = document.getElementById("importBtn");
-  const fileInput = document.getElementById("fileInput");
-
-  const resetTodayBtn = document.getElementById("resetTodayBtn");
-  const wipeAllBtn = document.getElementById("wipeAllBtn");
-
-  const name1 = document.getElementById("name1");
-  const name2 = document.getElementById("name2");
-  const name3 = document.getElementById("name3");
-  const saveNamesBtn = document.getElementById("saveNamesBtn");
-
-  let state = loadState();
-  let mode = "day"; // default view mode
-
-  function renderCards() {
-    const key = todayKey();
-    ensureDay(key);
-    const todays = state.daily[key];
-
-    cardsEl.innerHTML = "";
-    state.names.forEach((label, idx) => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `
-        <button class="btn" id="btn-${idx}">${label}</button>
-        <div class="meta">
-          <div><b>Today:</b> <span id="today-${idx}">${todays[idx]}</span></div>
-          <div class="small">Date: ${key}</div>
+    <div id="rollup">
+        <div class="header-row">
+            <div class="target-wrapper">
+                <label for="targetInput">Target</label>
+                <input type="number" id="targetInput" placeholder="0" oninput="updateTarget(this.value)">
+            </div>
+            <div class="right-clump">
+                <div id="totalPill" class="pill">Total: 0</div>
+                <div id="weightedPill" class="pill">0</div>
+            </div>
         </div>
-      `;
-      cardsEl.appendChild(card);
-      card.querySelector(`#btn-${idx}`).addEventListener("click", () => inc(idx));
-    });
-  }
 
-  function renderHeaders() {
-    t1Head.textContent = state.names[0];
-    t2Head.textContent = state.names[1];
-    t3Head.textContent = state.names[2];
+        <div id="metricsRow" class="metrics-row hidden">
+            <!-- Populated by JS -->
+        </div>
 
-    name1.value = state.names[0];
-    name2.value = state.names[1];
-    name3.value = state.names[2];
-  }
+        <div id="weekStrip">
+            <!-- Populated by JS -->
+        </div>
 
-  function renderRollup() {
-    const pretty =
-      mode === "day" ? "Today (daily buckets)" :
-      mode === "week" ? "This week (ISO week buckets)" :
-      "This month (month buckets)";
+        <div id="rollupContent" class="table-container">No data yet.</div>
+    </div>
 
-    rollupLabel.textContent = pretty;
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay" onclick="if(event.target===this) closeSettings()">
+        <div class="modal-card">
+            <h3 style="margin-top: 0; margin-bottom: 16px;">Settings</h3>
+            
+            <div class="modal-row">
+                <label>Row 1</label>
+                <div class="modal-inputs">
+                    <input type="text" id="name0" placeholder="Name">
+                    <input type="number" id="weight0" placeholder="Wt">
+                </div>
+            </div>
+            <div class="modal-row">
+                <label>Row 2</label>
+                <div class="modal-inputs">
+                    <input type="text" id="name1" placeholder="Name">
+                    <input type="number" id="weight1" placeholder="Wt">
+                </div>
+            </div>
+            <div class="modal-row">
+                <label>Row 3</label>
+                <div class="modal-inputs">
+                    <input type="text" id="name2" placeholder="Name">
+                    <input type="number" id="weight2" placeholder="Wt">
+                </div>
+            </div>
 
-    const rows = rollupForCurrent(mode);
-    const allRows = rollup(mode); // for total pill across all time? keep it current bucket only for clarity
+            <div class="modal-actions">
+                <button class="btn-link" onclick="resetDefaults()">Reset to Defaults</button>
+                <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+                <button class="btn-primary" onclick="saveSettings()">Save</button>
+            </div>
+        </div>
+    </div>
 
-    // Show only current bucket rows (one row), but keep table structure
-    rollupBody.innerHTML = "";
-    if (rows.length === 0) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="small">No data yet.</td>`;
-      rollupBody.appendChild(tr);
-      totalPill.textContent = "Total: 0";
-      return;
-    }
+    <script>
+        // Data model
+        let daily = JSON.parse(localStorage.getItem('daily')) || {};
+        let weeklyTarget = parseInt(localStorage.getItem('weeklyTarget')) || 0;
+        
+        let config = {
+            names: ["Ticker 1", "Ticker 2", "Ticker 3"],
+            weights: [7, 5, 0]
+        };
 
-    const r = rows[0];
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><b>${r.bucket}</b></td>
-      <td>${r.counts[0]}</td>
-      <td>${r.counts[1]}</td>
-      <td>${r.counts[2]}</td>
-      <td><b>${r.total}</b></td>
-    `;
-    rollupBody.appendChild(tr);
-    totalPill.textContent = `Total: ${r.total}`;
-  }
+        // Load Config
+        try {
+            const savedNames = JSON.parse(localStorage.getItem('names'));
+            const savedWeights = JSON.parse(localStorage.getItem('weights'));
+            if (savedNames && savedNames.length === 3) config.names = savedNames;
+            if (savedWeights && savedWeights.length === 3) config.weights = savedWeights;
+        } catch (e) {
+            console.error("Error loading config", e);
+        }
 
-  function setMode(next) {
-    mode = next;
-    renderRollup();
-  }
+        // Init UI
+        document.getElementById('targetInput').value = weeklyTarget || '';
+        updateTickersHelp();
+        
+        // --- Settings Functions ---
+        function openSettings() {
+            document.getElementById('name0').value = config.names[0];
+            document.getElementById('weight0').value = config.weights[0];
+            document.getElementById('name1').value = config.names[1];
+            document.getElementById('weight1').value = config.weights[1];
+            document.getElementById('name2').value = config.names[2];
+            document.getElementById('weight2').value = config.weights[2];
+            document.getElementById('settingsModal').classList.add('open');
+        }
 
-  function render() {
-    renderHeaders();
-    renderCards();
-    renderRollup();
-  }
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('open');
+        }
 
-  // ---------- Export / Import ----------
-  function downloadJSON(filename, obj) {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
+        function saveSettings() {
+            // Read & Validate
+            const n0 = document.getElementById('name0').value.trim() || "Ticker 1";
+            const w0 = parseFloat(document.getElementById('weight0').value);
+            const n1 = document.getElementById('name1').value.trim() || "Ticker 2";
+            const w1 = parseFloat(document.getElementById('weight1').value);
+            const n2 = document.getElementById('name2').value.trim() || "Ticker 3";
+            const w2 = parseFloat(document.getElementById('weight2').value);
 
-  exportBtn.addEventListener("click", () => {
-    const fname = `3-ticker-counter-${todayKey()}.json`;
-    downloadJSON(fname, state);
-  });
+            config.names = [n0, n1, n2];
+            config.weights = [
+                isNaN(w0) ? 7 : (w0 < 0 ? 0 : w0),
+                isNaN(w1) ? 5 : (w1 < 0 ? 0 : w1),
+                isNaN(w2) ? 0 : (w2 < 0 ? 0 : w2)
+            ];
 
-  importBtn.addEventListener("click", () => fileInput.click());
+            localStorage.setItem('names', JSON.stringify(config.names));
+            localStorage.setItem('weights', JSON.stringify(config.weights));
+            
+            updateTickersHelp();
+            renderRollup(); // Re-calc all metrics immediately
+            closeSettings();
+        }
 
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const incoming = JSON.parse(text);
+        function resetDefaults() {
+            if(confirm("Reset names and weights to default?")) {
+                config.names = ["Ticker 1", "Ticker 2", "Ticker 3"];
+                config.weights = [7, 5, 0];
+                document.getElementById('name0').value = config.names[0];
+                document.getElementById('weight0').value = config.weights[0];
+                document.getElementById('name1').value = config.names[1];
+                document.getElementById('weight1').value = config.weights[1];
+                document.getElementById('name2').value = config.names[2];
+                document.getElementById('weight2').value = config.weights[2];
+            }
+        }
 
-      // merge safely: keep only expected structure
-      const merged = defaultState();
-      if (Array.isArray(incoming.names) && incoming.names.length === 3) merged.names = incoming.names.map(String);
-      if (incoming.daily && typeof incoming.daily === "object") merged.daily = incoming.daily;
+        function updateTickersHelp() {
+            // Update buttons
+            document.getElementById('btn0').textContent = config.names[0];
+            document.getElementById('btn1').textContent = config.names[1];
+            document.getElementById('btn2').textContent = config.names[2];
+        }
 
-      state = merged;
-      saveState();
-      render();
-      alert("Import complete.");
-    } catch (err) {
-      alert("Import failed: invalid JSON.");
-    } finally {
-      fileInput.value = "";
-    }
-  });
+        // Close modal on ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeSettings();
+            }
+        });
 
-  // ---------- Buttons ----------
-  viewDay.addEventListener("click", () => setMode("day"));
-  viewWeek.addEventListener("click", () => setMode("week"));
-  viewMonth.addEventListener("click", () => setMode("month"));
 
-  resetTodayBtn.addEventListener("click", () => {
-    if (confirm("Reset today's counts to zero?")) resetToday();
-  });
+        // --- Existing Helpers ---
 
-  wipeAllBtn.addEventListener("click", () => {
-    if (confirm("Wipe ALL data (cannot be undone)?")) wipeAll();
-  });
+        function toLocalYMD(dateObj) {
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        function getToday() {
+            return toLocalYMD(new Date());
+        }
 
-  saveNamesBtn.addEventListener("click", () => {
-    state.names = [name1.value || "Ticker 1", name2.value || "Ticker 2", name3.value || "Ticker 3"];
-    saveState();
-    render();
-  });
+        function getStartOfISOWeek(dateObj) {
+            const d = new Date(dateObj);
+            const day = d.getDay(); // 0 (Sun) to 6 (Sat)
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
 
-  // Initial
-  saveState();
-  render();
-})();
-</script>
+        function addDays(dateObj, n) {
+            const d = new Date(dateObj);
+            d.setDate(d.getDate() + n);
+            return d;
+        }
+
+        function formatDayLabel(dateObj) {
+            // "Thu 15 Jan" using en-GB
+            return new Intl.DateTimeFormat('en-GB', { 
+                weekday: 'short', 
+                day: '2-digit', 
+                month: 'short' 
+            }).format(dateObj);
+        }
+
+        function getDayCounts(ymd) {
+            return daily[ymd] || [0, 0, 0];
+        }
+
+        function getWeightedFromCounts(c) {
+            return c[0]*config.weights[0] + c[1]*config.weights[1] + c[2]*config.weights[2];
+        }
+
+        function addCount(index) {
+            const today = getToday();
+            if (!daily[today]) daily[today] = [0, 0, 0];
+            daily[today][index]++;
+            save();
+            renderRollup();
+        }
+
+        function updateTarget(val) {
+            weeklyTarget = val === '' ? 0 : parseInt(val);
+            localStorage.setItem('weeklyTarget', weeklyTarget);
+            renderRollup();
+        }
+
+        function save() {
+            localStorage.setItem('daily', JSON.stringify(daily));
+        }
+
+        function renderRollup() {
+            const keys = Object.keys(daily).sort().reverse();
+            const totalPill = document.getElementById('totalPill');
+            const weightedPill = document.getElementById('weightedPill');
+            const content = document.getElementById('rollupContent');
+            const metricsRow = document.getElementById('metricsRow');
+            const weekStrip = document.getElementById('weekStrip');
+
+            // --- 1. Compute Totals (Global & Weighted) ---
+            let globalRawTotal = 0;
+            let currentViewWeightedTotal = 0; 
+            
+            keys.forEach(date => {
+                const c = daily[date];
+                globalRawTotal += (c[0] + c[1] + c[2]);
+                currentViewWeightedTotal += getWeightedFromCounts(c);
+            });
+
+            totalPill.textContent = "Total: " + globalRawTotal;
+            weightedPill.textContent = String(currentViewWeightedTotal);
+
+
+            // --- 2. Compute Weekly Metrics (Current Week) & Draw Strip ---
+            const now = new Date();
+            const todayYMD = toLocalYMD(now);
+            const mondayDate = getStartOfISOWeek(now);
+            const currentMonday = toLocalYMD(mondayDate);
+            const currentSunday = toLocalYMD(addDays(mondayDate, 6));
+
+            let weeklyWeightedSoFar = 0;
+            let stripHtml = '';
+            const dailyAvg = weeklyTarget > 0 ? weeklyTarget / 7 : 0;
+            const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            // Loop 0..6 for Mon..Sun
+            for (let i = 0; i < 7; i++) {
+                const dDate = addDays(mondayDate, i);
+                const dYMD = toLocalYMD(dDate);
+                const counts = getDayCounts(dYMD);
+                const weighted = getWeightedFromCounts(counts);
+
+                // Add to weekly total if in loop (all these days are in current week)
+                weeklyWeightedSoFar += weighted;
+
+                // Determine Display Value
+                let displayVal = '0';
+                let boxClass = 'week-box';
+                
+                if (dYMD === todayYMD) {
+                     boxClass += ' today';
+                     displayVal = String(weighted);
+                } else if (dYMD > todayYMD) {
+                    displayVal = '-';
+                     // Don't accumulate future "phantom" values if they existed, but
+                     // 'weighted' is calculated from data.
+                     // IMPORTANT: Logic 'weeklyWeightedSoFar' assumes table data is correct. 
+                     // If future data existed, it would count. But for display, show '-'.
+                     // Actually logic says "Show - ... regardless of existing data".
+                     // But for 'weeklyWeightedSoFar' used in KPI, we follow data. 
+                     // Usually future data = 0.
+                } else {
+                    // Past: Show weighted (which is 0 if no counts)
+                    displayVal = String(weighted);
+                }
+
+                // Tinting
+                if (weeklyTarget > 0 && dYMD <= todayYMD) {
+                    if (weighted > dailyAvg) boxClass += ' wb-pos';
+                    else if (weighted < dailyAvg) boxClass += ' wb-neg';
+                }
+
+                stripHtml += `
+                    <div class="${boxClass}">
+                        <div class="week-day">${dayLabels[i]}</div>
+                        <div class="week-val">${displayVal}</div>
+                    </div>
+                `;
+            }
+            weekStrip.innerHTML = stripHtml;
+
+            // Correct weeklyWeightedSoFar:
+            // The directive says "weeklyWeightedSoFar = sum of weighted totals for each day in current week.".
+            // My loop above does exactly that based on daily data.
+            
+            // ISO day index (1=Mon ... 7=Sun).
+            const dayOfWeekIndex = (now.getDay() + 6) % 7 + 1;
+            
+            if (weeklyTarget > 0) {
+                metricsRow.classList.remove('hidden');
+                
+                const expectedByNow = weeklyTarget * (dayOfWeekIndex / 7);
+                const deltaNow = weeklyWeightedSoFar - expectedByNow;
+                const remainingDays = 7 - dayOfWeekIndex;
+                const neededPerDay = remainingDays > 0 ? (weeklyTarget - weeklyWeightedSoFar) / remainingDays : 0;
+
+                // Render Tiles
+                metricsRow.innerHTML = `
+                    <div class="metric-tile">
+                        <span class="metric-val">${weeklyWeightedSoFar}</span>
+                        <span class="metric-label">Wk Total</span>
+                    </div>
+                    <div class="metric-tile">
+                        <span class="metric-val ${deltaNow < 0 ? 'metric-neg' : 'metric-pos'}">${deltaNow > 0 ? '+' : ''}${Math.round(deltaNow)}</span>
+                        <span class="metric-label">Gap</span>
+                    </div>
+                     <div class="metric-tile">
+                        <span class="metric-val">${Math.round(dailyAvg)}</span>
+                        <span class="metric-label">Avg/Day</span>
+                    </div>
+                     <div class="metric-tile">
+                        <span class="metric-val">${remainingDays > 0 ? Math.round(neededPerDay) : '—'}</span>
+                        <span class="metric-label">Need</span>
+                    </div>
+                `;
+            } else {
+                metricsRow.classList.add('hidden');
+            }
+
+
+            // --- 3. Render Table ---
+            if (keys.length === 0) {
+                content.textContent = "No data yet.";
+                return;
+            }
+
+            let html = `<table><tr><th>Date</th><th>T1</th><th>T2</th><th>T3</th><th>Total</th>`;
+            if (weeklyTarget > 0) html += `<th>±</th>`;
+            html += `</tr>`;
+
+            const rows = keys.map(date => {
+                const c = daily[date];
+                const rawTotal = c[0] + c[1] + c[2];
+                const weighted = getWeightedFromCounts(c);
+                
+                let deltaCell = '';
+                let rowClass = '';
+
+                if (weeklyTarget > 0) {
+                    const delta = weighted - dailyAvg;
+                    const sign = delta > 0 ? '+' : '';
+                    const rDelta = Math.round(delta);
+                    deltaCell = `<td class="delta-cell">${sign}${rDelta}</td>`;
+                    
+                    if (Math.round(delta) > 0) rowClass = 'row-pos';
+                    else if (Math.round(delta) < 0) rowClass = 'row-neg';
+                }
+
+                // Date Formatting: e.g. Thu 15 Jan
+                // date is YYYY-MM-DD
+                const dateObj = new Date(date); 
+                // Note: new Date("2025-01-15") is UTC. 
+                // We want to avoid timezone shifts. 
+                // Better to simple parse YMD parts and construct local date if needed for formatDayLabel
+                // OR use a safe way.
+                // formatDayLabel uses dateObj. Assuming inputs are local dates (as per prompts).
+                // Let's create a local date from the YYYY-MM-DD string to be safe.
+                const [y, m, d] = date.split('-').map(Number);
+                const localDate = new Date(y, m - 1, d);
+                const dateLabel = formatDayLabel(localDate);
+
+                return `<tr class="${rowClass}">
+                    <td>${dateLabel}</td>
+                    <td>${c[0]}</td>
+                    <td>${c[1]}</td>
+                    <td>${c[2]}</td>
+                    <td>${rawTotal}</td>
+                    ${deltaCell}
+                </tr>`;
+            });
+
+            html += rows.join('');
+            html += `</table>`;
+            
+            content.innerHTML = html;
+        }
+
+        renderRollup();
+    </script>
 </body>
 </html>
