@@ -91,7 +91,7 @@
         .modal-card { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .modal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .modal-row label { width: 60px; font-weight: 600; font-size: 14px; }
-        .modal-inputs { flex: 1; display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
+        .modal-inputs { flex: 1; display: grid; grid-template-columns: 1fr 60px; gap: 8px; }
         .modal-inputs input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         .btn-link { background: none; border: none; font-size: 12px; color: #6c757d; cursor: pointer; text-decoration: underline; margin-right: auto; padding: 0; min-height: auto; box-shadow: none; font-weight: normal; }
@@ -170,6 +170,14 @@
                 </div>
             </div>
 
+            <div class="modal-row" style="border-top: 1px solid #eee; padding-top: 16px; margin-top: 16px; justify-content: space-between;">
+                <button class="btn-secondary" onclick="undoLast()">Undo Last</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary" onclick="location.reload()">Refresh</button>
+                    <button class="btn-secondary" style="color: #c53030; background: #fff5f5; border-color: #feb2b2;" onclick="clearData()">Reset Data</button>
+                </div>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn-link" onclick="resetDefaults()">Reset to Defaults</button>
                 <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
@@ -182,6 +190,7 @@
         // Data model
         let daily = JSON.parse(localStorage.getItem('daily')) || {};
         let weeklyTarget = parseInt(localStorage.getItem('weeklyTarget')) || 0;
+        let undoStack = [];
         
         let config = {
             names: ["Ticker 1", "Ticker 2", "Ticker 3"],
@@ -254,6 +263,30 @@
             }
         }
 
+        function undoLast() {
+            if (undoStack.length === 0) {
+                alert("Nothing to undo in this session.");
+                return;
+            }
+            const action = undoStack.pop();
+            if (daily[action.date] && daily[action.date][action.index] > 0) {
+                daily[action.date][action.index]--;
+                save();
+                renderRollup();
+                closeSettings();
+            }
+        }
+
+        function clearData() {
+            if (confirm("Clear ALL data? This cannot be undone.")) {
+                daily = {};
+                undoStack = [];
+                save();
+                renderRollup();
+                closeSettings();
+            }
+        }
+
         function updateTickersHelp() {
             // Update buttons
             document.getElementById('btn0').textContent = config.names[0];
@@ -316,6 +349,7 @@
             const today = getToday();
             if (!daily[today]) daily[today] = [0, 0, 0];
             daily[today][index]++;
+            undoStack.push({ date: today, index: index });
             save();
             renderRollup();
         }
@@ -455,7 +489,7 @@
                 return;
             }
 
-            let html = `<table><tr><th>Date</th><th>T1</th><th>T2</th><th>T3</th><th>Total</th>`;
+            let html = `<table><tr><th>Date</th><th>${config.names[0]}</th><th>${config.names[1]}</th><th>${config.names[2]}</th><th>Total</th>`;
             if (weeklyTarget > 0) html += `<th>±</th>`;
             html += `</tr>`;
 
