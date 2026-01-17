@@ -155,7 +155,7 @@
 <body>
 
     <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-        <button onclick="openSettings()" style="min-height: auto; max-width: 40px; border: none; box-shadow: none; font-size: 20px; color: #999; padding: 0;">⚙︎</button>
+        <button id="settingsBtn" style="min-height: 44px; min-width: 44px; border: none; box-shadow: none; font-size: 20px; color: #999; padding: 0; touch-action: manipulation;">⚙︎</button>
     </div>
 
     <div class="controls">
@@ -440,6 +440,7 @@
         document.getElementById('targetInput').value = weeklyTarget ? (weeklyTarget / 100) : '';
         updateTickerButtons();
         setupLongPress();
+        setupSettingsButton();
 
         // --- Long Press ---
         function setupLongPress() {
@@ -514,6 +515,26 @@
         function lpDrink() {
             if (lpIndex >= 0) addConsume(lpIndex);
             closeLpMenu();
+        }
+
+        // --- Settings Button (iOS PWA compatible) ---
+        function setupSettingsButton() {
+            const btn = document.getElementById('settingsBtn');
+            let touched = false;
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touched = true;
+                openSettings();
+            }, { passive: false });
+
+            btn.addEventListener('click', (e) => {
+                // Only handle click if not already handled by touch
+                if (!touched) {
+                    openSettings();
+                }
+                touched = false;
+            });
         }
 
         // Last batch values (persisted)
