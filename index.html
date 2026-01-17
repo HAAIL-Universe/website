@@ -15,33 +15,42 @@
             --neg-text: #c53030;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 16px; margin: 0; max-width: 600px; margin-left: auto; margin-right: auto; color: #333; }
-        
+
         /* Layout */
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-        button { 
+        .controls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        button {
             background: white; border: 1px solid #ccc; border-radius: 8px;
-            padding: 0; min-height: 52px; font-size: 16px; font-weight: 600; 
+            padding: 0; min-height: 52px; font-size: 16px; font-weight: 600;
             cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             transition: background 0.1s, transform 0.05s;
+            -webkit-user-select: none; user-select: none;
+            -webkit-touch-callout: none;
         }
         button:active { background: #f0f0f0; transform: scale(0.98); }
 
         /* Rollup Section */
         #rollup { margin-top: 20px; }
         .header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
-        .header-row h2 { margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
-        
+
         /* Pills & Target Input */
         .right-clump { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .target-wrapper { display: flex; align-items: center; gap: 6px; font-size: 14px; background: var(--bg-light); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
         .target-wrapper input { width: 50px; border: none; background: transparent; font-weight: 600; text-align: right; font-size: 14px; outline: none; }
-        
+
         .pill { background: #e9ecef; padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 14px; white-space: nowrap; min-width: 40px; text-align: center; }
+        .pill-profit { background: var(--pos-bg); color: var(--pos-text); }
+        .pill-inventory { background: #e0f2fe; color: #0369a1; }
+        .pill-stock-value { background: #f3e8ff; color: #7c3aed; }
+        .pill-revenue { background: #fef3c7; color: #92400e; }
+        .pill-consumed { background: var(--neg-bg); color: var(--neg-text); }
+
+        /* Fund Pills Row */
+        .funds-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
 
         /* Weekly Metrics */
         .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-        .metric-tile { 
-            background: white; border: 1px solid var(--border); border-radius: 8px; 
+        .metric-tile {
+            background: white; border: 1px solid var(--border); border-radius: 8px;
             padding: 8px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .metric-val { font-weight: 700; font-size: 16px; line-height: 1.2; }
@@ -50,9 +59,9 @@
         .metric-pos { color: var(--pos-text); }
 
         /* Weekly Strip */
-        #weekStrip { 
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; 
-            margin-bottom: 16px; 
+        #weekStrip {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+            margin-bottom: 16px;
         }
         .week-box {
             border: 1px solid var(--border); border-radius: 6px;
@@ -68,12 +77,12 @@
         .wb-pos { background-color: var(--pos-bg); }
         .wb-neg .week-val { color: var(--neg-text); }
         .wb-neg { background-color: var(--neg-bg); }
-        
+
         /* Table */
         .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
-        th { background-color: var(--bg-light); font-weight: 600; text-align: right; white-space: nowrap;}
+        th, td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--bg-light); font-weight: 600; text-align: right; white-space: nowrap; font-size: 12px; }
         th:first-child, td:first-child { text-align: left; }
         tr:last-child td { border-bottom: none; }
 
@@ -88,23 +97,58 @@
         /* Settings Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
         .modal-overlay.open { display: flex; }
-        .modal-card { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .modal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .modal-row label { width: 60px; font-weight: 600; font-size: 14px; }
-        .modal-inputs { flex: 1; display: grid; grid-template-columns: 1fr 60px; gap: 8px; }
+        .modal-card { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 360px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .modal-section { margin-bottom: 16px; }
+        .modal-section-title { font-size: 11px; text-transform: uppercase; color: #6c757d; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px; }
+        .modal-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .modal-row label { width: 50px; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+        .modal-inputs { flex: 1; display: grid; grid-template-columns: 1fr 70px; gap: 6px; align-items: center; }
         .modal-inputs input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; }
+        .modal-inputs input[type="number"] { text-align: right; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
         .btn-link { background: none; border: none; font-size: 12px; color: #6c757d; cursor: pointer; text-decoration: underline; margin-right: auto; padding: 0; min-height: auto; box-shadow: none; font-weight: normal; }
         .btn-primary { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; min-height: auto; }
         .btn-secondary { background: #e9ecef; border: none; padding: 8px 16px; border-radius: 6px; min-height: auto; }
+        .btn-update { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; min-height: auto; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .btn-update:hover { background: #0069d9; }
+        .btn-update:active { background: #0056b3; }
 
-        @media (max-width: 375px) {
+        /* Batch section */
+        .batch-section { background: var(--bg-light); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+        .batch-section .batch-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .batch-section input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 70px; text-align: right; background: white; }
+        .batch-section .batch-label { font-size: 13px; color: #333; }
+        .batch-section .derived-info { font-size: 12px; color: var(--pos-text); font-weight: 600; margin-top: 8px; }
+
+        /* Settings header row */
+        .modal-header-row { display: grid; grid-template-columns: 50px 1fr 70px; gap: 6px; margin-bottom: 6px; padding-left: 8px; }
+        .modal-header-row span { font-size: 10px; text-transform: uppercase; color: #6c757d; text-align: center; }
+        .modal-header-row span:first-child { text-align: left; }
+
+        /* Long-press Menu */
+        .lp-menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); align-items: center; justify-content: center; z-index: 200; }
+        .lp-menu-overlay.open { display: flex; }
+        .lp-menu { background: white; border-radius: 12px; padding: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); min-width: 180px; }
+        .lp-menu button { display: block; width: 100%; text-align: left; padding: 12px 16px; border: none; background: none; font-size: 16px; cursor: pointer; border-radius: 8px; min-height: auto; box-shadow: none; }
+        .lp-menu button:hover { background: var(--bg-light); }
+        .lp-menu button:active { background: #e0e0e0; }
+        .lp-menu .lp-cancel { color: #6c757d; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 12px; border-radius: 0 0 8px 8px; }
+
+        /* Consume Controls */
+        .consume-controls { display: flex; align-items: center; gap: 6px; background: var(--neg-bg); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); }
+        .consume-label { font-size: 12px; font-weight: 600; color: var(--neg-text); }
+        .consume-btn { min-height: 28px; min-width: 32px; padding: 2px 8px; font-size: 14px; font-weight: 700; border-radius: 4px; background: white; border: 1px solid var(--border); }
+        .consume-btn:active { background: #f0f0f0; }
+
+        @media (max-width: 420px) {
             .controls { gap: 8px; }
             button { font-size: 14px; }
             .metrics-row { grid-template-columns: repeat(2, 1fr); }
             body { padding: 12px; }
             .modal-row { flex-direction: column; align-items: stretch; }
             .modal-row label { width: auto; margin-bottom: 4px; }
+            .modal-header-row { display: none; }
+            th, td { padding: 8px 4px; font-size: 12px; }
         }
     </style>
 </head>
@@ -115,66 +159,100 @@
     </div>
 
     <div class="controls">
-        <button id="btn0" onclick="addCount(0)">Ticker 1</button>
-        <button id="btn1" onclick="addCount(1)">Ticker 2</button>
-        <button id="btn2" onclick="addCount(2)">Ticker 3</button>
+        <button id="btn0">Ticker 1</button>
+        <button id="btn1">Ticker 2</button>
     </div>
 
     <div id="rollup">
+        <!-- Fund Pills -->
+        <div class="funds-row">
+            <div id="revenuePill" class="pill pill-revenue">Revenue: £0</div>
+            <div id="profitPill" class="pill pill-profit">Profit: £0</div>
+            <div id="consumedPill" class="pill pill-consumed">Consumed: £0</div>
+            <div id="stockPill" class="pill pill-inventory">Stock: 0</div>
+            <div id="stockValuePill" class="pill pill-stock-value">Value: £0</div>
+        </div>
+
         <div class="header-row">
             <div class="target-wrapper">
-                <label for="targetInput">Target</label>
+                <label for="targetInput">Profit Target</label>
                 <input type="number" id="targetInput" placeholder="0" oninput="updateTarget(this.value)">
             </div>
+            <div class="consume-controls">
+                <span class="consume-label">Consume</span>
+                <button class="consume-btn" onclick="consumeBottle()">+1</button>
+            </div>
             <div class="right-clump">
-                <div id="totalPill" class="pill">Total: 0</div>
-                <div id="weightedPill" class="pill">0</div>
+                <div id="totalPill" class="pill">Units: 0</div>
             </div>
         </div>
 
-        <div id="metricsRow" class="metrics-row hidden">
-            <!-- Populated by JS -->
-        </div>
-
-        <div id="weekStrip">
-            <!-- Populated by JS -->
-        </div>
-
+        <div id="metricsRow" class="metrics-row hidden"></div>
+        <div id="weekStrip"></div>
         <div id="rollupContent" class="table-container">No data yet.</div>
+    </div>
+
+    <!-- Long-press Menu -->
+    <div id="lpMenuOverlay" class="lp-menu-overlay" onclick="if(event.target===this) closeLpMenu()">
+        <div class="lp-menu">
+            <button id="lpSellBtn" onclick="lpSell()">Sell +1</button>
+            <button id="lpDrinkBtn" onclick="lpDrink()">Drink +1</button>
+            <button class="lp-cancel" onclick="closeLpMenu()">Cancel</button>
+        </div>
     </div>
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay" onclick="if(event.target===this) closeSettings()">
         <div class="modal-card">
             <h3 style="margin-top: 0; margin-bottom: 16px;">Settings</h3>
-            
-            <div class="modal-row">
-                <label>Row 1</label>
-                <div class="modal-inputs">
-                    <input type="text" id="name0" placeholder="Name">
-                    <input type="number" id="weight0" placeholder="Wt">
+
+            <!-- Add Stock Section -->
+            <div class="batch-section">
+                <div class="modal-section-title">Add Stock (bottles)</div>
+                <div class="batch-row">
+                    <input type="number" id="batchBottles" placeholder="bottles" min="1" step="1" oninput="updateCostDisplay()">
+                    <span class="batch-label">bottles @</span>
+                    <input type="number" id="batchCost" placeholder="£" step="0.01" oninput="updateCostDisplay()">
+                    <button class="btn-update" onclick="addStockFromBatch()">Add Stock</button>
                 </div>
-            </div>
-            <div class="modal-row">
-                <label>Row 2</label>
-                <div class="modal-inputs">
-                    <input type="text" id="name1" placeholder="Name">
-                    <input type="number" id="weight1" placeholder="Wt">
-                </div>
-            </div>
-            <div class="modal-row">
-                <label>Row 3</label>
-                <div class="modal-inputs">
-                    <input type="text" id="name2" placeholder="Name">
-                    <input type="number" id="weight2" placeholder="Wt">
-                </div>
+                <div class="derived-info" id="costPerMlDisplay"></div>
+                <div class="derived-info" id="currentStockDisplay" style="margin-top: 4px;"></div>
             </div>
 
-            <div class="modal-row" style="border-top: 1px solid #eee; padding-top: 16px; margin-top: 16px; justify-content: space-between;">
+            <!-- Ticker Rows -->
+            <div class="modal-section">
+                <div class="modal-header-row">
+                    <span></span>
+                    <span>Name</span>
+                    <span>Sale £</span>
+                </div>
+
+                <!-- Row 1 -->
+                <div class="modal-row">
+                    <label>Row 1</label>
+                    <div class="modal-inputs">
+                        <input type="text" id="name0" placeholder="Name">
+                        <input type="number" id="salePrice0" placeholder="£" step="0.01" oninput="updateCostDisplay()">
+                    </div>
+                </div>
+                <div class="derived-info" id="derivedProfit0" style="margin-left: 58px; margin-top: -6px; margin-bottom: 10px;"></div>
+
+                <!-- Row 2 -->
+                <div class="modal-row">
+                    <label>Row 2</label>
+                    <div class="modal-inputs">
+                        <input type="text" id="name1" placeholder="Name">
+                        <input type="number" id="salePrice1" placeholder="£" step="0.01" oninput="updateCostDisplay()">
+                    </div>
+                </div>
+                <div class="derived-info" id="derivedProfit1" style="margin-left: 58px; margin-top: -6px; margin-bottom: 10px;"></div>
+            </div>
+
+            <div class="modal-row" style="border-top: 1px solid #eee; padding-top: 16px; margin-top: 8px; justify-content: space-between;">
                 <button class="btn-secondary" onclick="undoLast()">Undo Last</button>
                 <div style="display: flex; gap: 8px;">
                     <button class="btn-secondary" onclick="location.reload()">Refresh</button>
-                    <button class="btn-secondary" style="color: #c53030; background: #fff5f5; border-color: #feb2b2;" onclick="clearData()">Reset Data</button>
+                    <button class="btn-secondary" style="color: #c53030; background: #fff5f5;" onclick="clearData()">Reset Data</button>
                 </div>
             </div>
 
@@ -187,39 +265,358 @@
     </div>
 
     <script>
-        // Data model
+        // Data model - all money in PENNIES
         let daily = JSON.parse(localStorage.getItem('daily')) || {};
+        let daily_consumed = JSON.parse(localStorage.getItem('daily_consumed')) || {};
         let weeklyTarget = parseInt(localStorage.getItem('weeklyTarget')) || 0;
         let undoStack = [];
-        
+
+        // Config - sale_prices and ml_per_tick define revenue per tick
+        // Profit is DERIVED: sale_price - avg_cost_per_bottle
         let config = {
             names: ["Ticker 1", "Ticker 2", "Ticker 3"],
-            weights: [7, 5, 0]
+            sale_prices: [2500, 1000, 0],  // revenue per tick in pennies (£25, £10, £0)
+            ml_per_tick: [35, 10, 0],      // ml consumed per tick
+            types: ["sale", "sale", "brew"],
+            // Stock tracking (proper accounting)
+            stock_units: 0,           // bottles remaining
+            stock_cost_total: 0       // total cost basis of remaining stock (pennies)
         };
 
-        // Load Config
+        // Derived value helpers
+        function getAvgCostPerBottle() {
+            if (config.stock_units > 0) {
+                return config.stock_cost_total / config.stock_units;
+            }
+            return 0;
+        }
+
+        function getCostPerTick(index) {
+            // Cost per tick based on ml consumed and avg cost per bottle
+            // Assuming 1 bottle = 10ml (BOTTLE_ML), scale accordingly
+            const bottlesUsed = config.ml_per_tick[index] / BOTTLE_ML;
+            return Math.round(bottlesUsed * getAvgCostPerBottle());
+        }
+
+        function getProfitPerTick(index) {
+            return config.sale_prices[index] - getCostPerTick(index);
+        }
+
+        function getRevenuePerTick(index) {
+            return config.sale_prices[index];
+        }
+
+        // Bottle size constant (ml per bottle)
+        const BOTTLE_ML = 10;
+
+        // Load Config with migration
         try {
             const savedNames = JSON.parse(localStorage.getItem('names'));
-            const savedWeights = JSON.parse(localStorage.getItem('weights'));
+            const savedSalePrices = JSON.parse(localStorage.getItem('sale_prices'));
+            const savedMlPerTick = JSON.parse(localStorage.getItem('ml_per_tick'));
+            const savedStockUnits = parseInt(localStorage.getItem('stock_units'));
+            const savedStockCostTotal = parseInt(localStorage.getItem('stock_cost_total'));
+
+            // Load stock values
+            if (!isNaN(savedStockUnits)) config.stock_units = savedStockUnits;
+            if (!isNaN(savedStockCostTotal)) config.stock_cost_total = savedStockCostTotal;
+
+            // Migration: old batch format -> stock (one-time)
+            const savedBatchVolume = parseInt(localStorage.getItem('batchVolumeMl'));
+            const savedBatchCost = parseInt(localStorage.getItem('batchCostPence'));
+            if (!isNaN(savedBatchVolume) && !isNaN(savedBatchCost) && savedBatchVolume > 0 && savedBatchCost > 0) {
+                // If we have old batch data but no stock, migrate it
+                if (config.stock_units === 0 && config.stock_cost_total === 0) {
+                    const batchBottles = Math.floor(savedBatchVolume / BOTTLE_ML);
+                    if (batchBottles > 0) {
+                        config.stock_units = batchBottles;
+                        config.stock_cost_total = savedBatchCost;
+                        localStorage.setItem('stock_units', config.stock_units);
+                        localStorage.setItem('stock_cost_total', config.stock_cost_total);
+                        console.log('Migrated old batch to stock:', batchBottles, 'bottles at', savedBatchCost, 'pence');
+                    }
+                }
+            }
+
+            // Migration: old profits/costs -> sale_prices
+            if (!savedSalePrices) {
+                const savedProfits = JSON.parse(localStorage.getItem('profits'));
+                const savedCosts = JSON.parse(localStorage.getItem('costs'));
+
+                // Migration from even older weights format
+                if (!savedProfits) {
+                    const oldWeights = JSON.parse(localStorage.getItem('weights'));
+                    if (oldWeights && oldWeights.length === 3) {
+                        // Old weights were profit values, assume default sale prices
+                        config.sale_prices = [2500, 1000, 0];
+                    }
+                } else if (savedProfits.length === 3) {
+                    // Convert old profit + cost -> sale_price
+                    const costs = savedCosts && savedCosts.length === 3 ? savedCosts : [0, 0, 0];
+                    config.sale_prices = [
+                        savedProfits[0] + costs[0],
+                        savedProfits[1] + costs[1],
+                        0
+                    ];
+                }
+                // Save migrated sale_prices
+                localStorage.setItem('sale_prices', JSON.stringify(config.sale_prices));
+            } else if (savedSalePrices.length === 3) {
+                config.sale_prices = savedSalePrices;
+            }
+
+            // Load ml_per_tick (defaults are fine if not saved)
+            if (savedMlPerTick && savedMlPerTick.length === 3) {
+                config.ml_per_tick = savedMlPerTick;
+            }
+
             if (savedNames && savedNames.length === 3) config.names = savedNames;
-            if (savedWeights && savedWeights.length === 3) config.weights = savedWeights;
         } catch (e) {
             console.error("Error loading config", e);
         }
 
-        // Init UI
-        document.getElementById('targetInput').value = weeklyTarget || '';
-        updateTickersHelp();
-        
-        // --- Settings Functions ---
+        // Migrate historical data from old format to new snapshot format
+        function migrateHistoricalData() {
+            let migrated = false;
+
+            // Migrate daily (sales)
+            Object.keys(daily).forEach(date => {
+                const entry = daily[date];
+                // Check if old format (array of numbers)
+                if (Array.isArray(entry) && typeof entry[0] === 'number') {
+                    const costPerMl = getCostPerMl();
+                    daily[date] = entry.map((count, idx) => {
+                        const costPerTick = Math.round(config.ml_per_tick[idx] * costPerMl);
+                        const profitPerTick = config.sale_prices[idx] - costPerTick;
+                        const revPerTick = config.sale_prices[idx];
+                        return {
+                            count: count,
+                            profit_delta: count * profitPerTick,
+                            rev_delta: count * revPerTick,
+                            inv_delta: count * costPerTick,
+                            cost_per_ml_snapshot: costPerMl,
+                            _migrated: true
+                        };
+                    });
+                    migrated = true;
+                }
+            });
+
+            // Migrate daily_consumed
+            Object.keys(daily_consumed).forEach(date => {
+                const entry = daily_consumed[date];
+                // Check if old format (array of numbers)
+                if (Array.isArray(entry) && typeof entry[0] === 'number') {
+                    const costPerMl = getCostPerMl();
+                    daily_consumed[date] = entry.map((count, idx) => {
+                        const costPerTick = Math.round(config.ml_per_tick[idx] * costPerMl);
+                        return {
+                            count: count,
+                            inv_delta: -(count * costPerTick),
+                            cost_per_ml_snapshot: costPerMl,
+                            _migrated: true
+                        };
+                    });
+                    migrated = true;
+                }
+            });
+
+            if (migrated) {
+                localStorage.setItem('daily', JSON.stringify(daily));
+                localStorage.setItem('daily_consumed', JSON.stringify(daily_consumed));
+                console.log('Historical data migrated to snapshot format');
+            }
+        }
+
+        // Run migration on load
+        migrateHistoricalData();
+
+        // Long-press state
+        let lpTimeout = null;
+        let lpIndex = -1;
+        const LP_DURATION = 500;
+
+        // Init
+        document.getElementById('targetInput').value = weeklyTarget ? (weeklyTarget / 100) : '';
+        updateTickerButtons();
+        setupLongPress();
+
+        // --- Long Press ---
+        function setupLongPress() {
+            [0, 1].forEach(idx => {
+                const btn = document.getElementById('btn' + idx);
+
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    startLongPress(idx);
+                }, { passive: false });
+
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    endLongPress(idx);
+                });
+
+                btn.addEventListener('touchcancel', () => cancelLongPress());
+                btn.addEventListener('touchmove', () => cancelLongPress());
+
+                btn.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) startLongPress(idx);
+                });
+
+                btn.addEventListener('mouseup', (e) => {
+                    if (e.button === 0) endLongPress(idx);
+                });
+
+                btn.addEventListener('mouseleave', () => cancelLongPress());
+            });
+        }
+
+        function startLongPress(idx) {
+            lpIndex = idx;
+            lpTimeout = setTimeout(() => {
+                openLpMenu(idx);
+                lpTimeout = null;
+            }, LP_DURATION);
+        }
+
+        function endLongPress(idx) {
+            if (lpTimeout !== null) {
+                clearTimeout(lpTimeout);
+                lpTimeout = null;
+                addSale(idx);
+            }
+        }
+
+        function cancelLongPress() {
+            if (lpTimeout !== null) {
+                clearTimeout(lpTimeout);
+                lpTimeout = null;
+            }
+        }
+
+        function openLpMenu(idx) {
+            lpIndex = idx;
+            document.getElementById('lpSellBtn').textContent = `Sell ${config.names[idx]} +1`;
+            document.getElementById('lpDrinkBtn').textContent = `Drink ${config.names[idx]} +1`;
+            document.getElementById('lpMenuOverlay').classList.add('open');
+        }
+
+        function closeLpMenu() {
+            document.getElementById('lpMenuOverlay').classList.remove('open');
+            lpIndex = -1;
+        }
+
+        function lpSell() {
+            if (lpIndex >= 0) addSale(lpIndex);
+            closeLpMenu();
+        }
+
+        function lpDrink() {
+            if (lpIndex >= 0) addConsume(lpIndex);
+            closeLpMenu();
+        }
+
+        // Last batch values (persisted)
+        let lastBatchBottles = parseInt(localStorage.getItem('lastBatchBottles')) || '';
+        let lastBatchCost = parseFloat(localStorage.getItem('lastBatchCost')) || '';
+
+        // --- Settings ---
         function openSettings() {
+            // Restore last batch inputs
+            document.getElementById('batchBottles').value = lastBatchBottles || '';
+            document.getElementById('batchCost').value = lastBatchCost ? lastBatchCost.toFixed(2) : '';
+
+            // Row 1
             document.getElementById('name0').value = config.names[0];
-            document.getElementById('weight0').value = config.weights[0];
+            document.getElementById('salePrice0').value = (config.sale_prices[0] / 100).toFixed(2);
+
+            // Row 2
             document.getElementById('name1').value = config.names[1];
-            document.getElementById('weight1').value = config.weights[1];
-            document.getElementById('name2').value = config.names[2];
-            document.getElementById('weight2').value = config.weights[2];
+            document.getElementById('salePrice1').value = (config.sale_prices[1] / 100).toFixed(2);
+
+            // Update displays
+            updateCostDisplay();
+
             document.getElementById('settingsModal').classList.add('open');
+        }
+
+        function updateCostDisplay() {
+            const batchBottles = parseInt(document.getElementById('batchBottles').value) || 0;
+            const batchCostPounds = parseFloat(document.getElementById('batchCost').value) || 0;
+            const batchCostPence = Math.round(batchCostPounds * 100);
+            const display = document.getElementById('costPerMlDisplay');
+            const stockDisplay = document.getElementById('currentStockDisplay');
+
+            // Show current stock
+            const avgCost = getAvgCostPerBottle();
+            stockDisplay.textContent = `Current: ${config.stock_units} bottles @ £${(avgCost / 100).toFixed(2)}/bottle avg`;
+
+            if (batchBottles > 0 && batchCostPence > 0) {
+                const costPerBottle = batchCostPence / batchBottles;
+                display.textContent = `= £${(costPerBottle / 100).toFixed(2)}/bottle`;
+
+                // Update derived profit displays based on current avg cost
+                const salePrice0 = parseFloat(document.getElementById('salePrice0').value) || 0;
+                const salePrice1 = parseFloat(document.getElementById('salePrice1').value) || 0;
+                const bottlesUsed0 = config.ml_per_tick[0] / BOTTLE_ML;
+                const bottlesUsed1 = config.ml_per_tick[1] / BOTTLE_ML;
+                const cost0 = (avgCost * bottlesUsed0) / 100;
+                const cost1 = (avgCost * bottlesUsed1) / 100;
+                const profit0 = salePrice0 - cost0;
+                const profit1 = salePrice1 - cost1;
+
+                document.getElementById('derivedProfit0').textContent = `Profit: £${profit0.toFixed(2)} (${bottlesUsed0} bottles)`;
+                document.getElementById('derivedProfit1').textContent = `Profit: £${profit1.toFixed(2)} (${bottlesUsed1} bottles)`;
+            } else {
+                display.textContent = '';
+                // Still show current profit based on avg cost
+                if (config.stock_units > 0) {
+                    const salePrice0 = parseFloat(document.getElementById('salePrice0').value) || 0;
+                    const salePrice1 = parseFloat(document.getElementById('salePrice1').value) || 0;
+                    const bottlesUsed0 = config.ml_per_tick[0] / BOTTLE_ML;
+                    const bottlesUsed1 = config.ml_per_tick[1] / BOTTLE_ML;
+                    const cost0 = (avgCost * bottlesUsed0) / 100;
+                    const cost1 = (avgCost * bottlesUsed1) / 100;
+                    const profit0 = salePrice0 - cost0;
+                    const profit1 = salePrice1 - cost1;
+
+                    document.getElementById('derivedProfit0').textContent = `Profit: £${profit0.toFixed(2)} (${bottlesUsed0} bottles)`;
+                    document.getElementById('derivedProfit1').textContent = `Profit: £${profit1.toFixed(2)} (${bottlesUsed1} bottles)`;
+                } else {
+                    document.getElementById('derivedProfit0').textContent = '';
+                    document.getElementById('derivedProfit1').textContent = '';
+                }
+            }
+        }
+
+        // Add stock from batch - ADDs to existing stock (weighted average)
+        function addStockFromBatch() {
+            const batchBottles = parseInt(document.getElementById('batchBottles').value) || 0;
+            const batchCostPounds = parseFloat(document.getElementById('batchCost').value) || 0;
+            const batchCostPence = Math.round(batchCostPounds * 100);
+
+            if (batchBottles <= 0 || batchCostPence <= 0) {
+                alert('Please enter number of bottles and cost (£) first.');
+                return;
+            }
+
+            // Add to stock (weighted average cost)
+            config.stock_units += batchBottles;
+            config.stock_cost_total += batchCostPence;
+
+            // Persist stock values
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            // Save last batch values (keep inputs populated)
+            lastBatchBottles = batchBottles;
+            lastBatchCost = batchCostPounds;
+            localStorage.setItem('lastBatchBottles', lastBatchBottles);
+            localStorage.setItem('lastBatchCost', lastBatchCost);
+
+            // Re-render
+            renderRollup();
+            updateCostDisplay();
         }
 
         function closeSettings() {
@@ -227,39 +624,39 @@
         }
 
         function saveSettings() {
-            // Read & Validate
+            // Row 1
             const n0 = document.getElementById('name0').value.trim() || "Ticker 1";
-            const w0 = parseFloat(document.getElementById('weight0').value);
-            const n1 = document.getElementById('name1').value.trim() || "Ticker 2";
-            const w1 = parseFloat(document.getElementById('weight1').value);
-            const n2 = document.getElementById('name2').value.trim() || "Ticker 3";
-            const w2 = parseFloat(document.getElementById('weight2').value);
+            const sp0 = parseFloat(document.getElementById('salePrice0').value);
 
-            config.names = [n0, n1, n2];
-            config.weights = [
-                isNaN(w0) ? 7 : (w0 < 0 ? 0 : w0),
-                isNaN(w1) ? 5 : (w1 < 0 ? 0 : w1),
-                isNaN(w2) ? 0 : (w2 < 0 ? 0 : w2)
-            ];
+            // Row 2
+            const n1 = document.getElementById('name1').value.trim() || "Ticker 2";
+            const sp1 = parseFloat(document.getElementById('salePrice1').value);
+
+            config.names[0] = n0;
+            config.names[1] = n1;
+            config.sale_prices[0] = isNaN(sp0) ? 2500 : Math.round(Math.max(0, sp0) * 100);
+            config.sale_prices[1] = isNaN(sp1) ? 1000 : Math.round(Math.max(0, sp1) * 100);
 
             localStorage.setItem('names', JSON.stringify(config.names));
-            localStorage.setItem('weights', JSON.stringify(config.weights));
-            
-            updateTickersHelp();
-            renderRollup(); // Re-calc all metrics immediately
+            localStorage.setItem('sale_prices', JSON.stringify(config.sale_prices));
+            localStorage.setItem('ml_per_tick', JSON.stringify(config.ml_per_tick));
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            updateTickerButtons();
+            renderRollup();
             closeSettings();
         }
 
         function resetDefaults() {
-            if(confirm("Reset names and weights to default?")) {
-                config.names = ["Ticker 1", "Ticker 2", "Ticker 3"];
-                config.weights = [7, 5, 0];
-                document.getElementById('name0').value = config.names[0];
-                document.getElementById('weight0').value = config.weights[0];
-                document.getElementById('name1').value = config.names[1];
-                document.getElementById('weight1').value = config.weights[1];
-                document.getElementById('name2').value = config.names[2];
-                document.getElementById('weight2').value = config.weights[2];
+            if (confirm("Reset all settings to default?")) {
+                document.getElementById('batchBottles').value = '';
+                document.getElementById('batchCost').value = '';
+                document.getElementById('name0').value = "Ticker 1";
+                document.getElementById('salePrice0').value = "25.00";
+                document.getElementById('name1').value = "Ticker 2";
+                document.getElementById('salePrice1').value = "10.00";
+                updateCostDisplay();
             }
         }
 
@@ -269,55 +666,102 @@
                 return;
             }
             const action = undoStack.pop();
-            if (daily[action.date] && daily[action.date][action.index] > 0) {
-                daily[action.date][action.index]--;
-                save();
-                renderRollup();
-                closeSettings();
+
+            if (action.action === 'sell') {
+                const entry = daily[action.date];
+                if (entry && entry[action.index] && entry[action.index].count > 0) {
+                    // Subtract the stored deltas exactly
+                    entry[action.index].count--;
+                    entry[action.index].profit_delta -= action.profit_delta;
+                    entry[action.index].rev_delta -= action.rev_delta;
+                    entry[action.index].inv_delta -= action.inv_delta;
+
+                    // Restore stock (add back what was sold)
+                    if (action.stock_units_delta) {
+                        config.stock_units += action.stock_units_delta;
+                        config.stock_cost_total += action.stock_cost_delta;
+                        localStorage.setItem('stock_units', config.stock_units);
+                        localStorage.setItem('stock_cost_total', config.stock_cost_total);
+                    }
+                    saveData();
+                }
+            } else if (action.action === 'drink' || action.action === 'consume') {
+                const entry = daily_consumed[action.date];
+                if (entry && entry[action.index] && entry[action.index].count > 0) {
+                    // Subtract the stored delta exactly
+                    entry[action.index].count--;
+                    entry[action.index].inv_delta -= action.inv_delta;
+
+                    // Restore stock (add back what was consumed)
+                    if (action.stock_units_delta) {
+                        config.stock_units += action.stock_units_delta;
+                        config.stock_cost_total += action.stock_cost_delta;
+                        localStorage.setItem('stock_units', config.stock_units);
+                        localStorage.setItem('stock_cost_total', config.stock_cost_total);
+                    }
+                    saveData();
+                }
+            } else if (action.action === 'restock') {
+                // Undo restock: remove the added stock
+                config.stock_units -= action.stock_units_delta;
+                config.stock_cost_total -= action.stock_cost_delta;
+                localStorage.setItem('stock_units', config.stock_units);
+                localStorage.setItem('stock_cost_total', config.stock_cost_total);
             }
+
+            renderRollup();
+            closeSettings();
         }
 
         function clearData() {
             if (confirm("Clear ALL data? This cannot be undone.")) {
+                // Reset all runtime state
                 daily = {};
+                daily_consumed = {};
                 undoStack = [];
-                save();
+
+                // Reset stock
+                config.stock_units = 0;
+                config.stock_cost_total = 0;
+
+                // Clear localStorage (preserve weeklyTarget and settings)
+                localStorage.removeItem('daily');
+                localStorage.removeItem('daily_consumed');
+                localStorage.removeItem('stock_units');
+                localStorage.removeItem('stock_cost_total');
+
                 renderRollup();
                 closeSettings();
             }
         }
 
-        function updateTickersHelp() {
-            // Update buttons
+        function updateTickerButtons() {
             document.getElementById('btn0').textContent = config.names[0];
             document.getElementById('btn1').textContent = config.names[1];
-            document.getElementById('btn2').textContent = config.names[2];
         }
 
-        // Close modal on ESC
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
                 closeSettings();
+                closeLpMenu();
             }
         });
 
-
-        // --- Existing Helpers ---
-
+        // --- Helpers ---
         function toLocalYMD(dateObj) {
             const year = dateObj.getFullYear();
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
             const day = String(dateObj.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-        
+
         function getToday() {
             return toLocalYMD(new Date());
         }
 
         function getStartOfISOWeek(dateObj) {
             const d = new Date(dateObj);
-            const day = d.getDay(); // 0 (Sun) to 6 (Sat)
+            const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             return new Date(d.setDate(diff));
         }
@@ -329,214 +773,422 @@
         }
 
         function formatDayLabel(dateObj) {
-            // "Thu 15 Jan" using en-GB
-            return new Intl.DateTimeFormat('en-GB', { 
-                weekday: 'short', 
-                day: '2-digit', 
-                month: 'short' 
+            return new Intl.DateTimeFormat('en-GB', {
+                weekday: 'short',
+                day: '2-digit',
+                month: 'short'
             }).format(dateObj);
         }
 
-        function getDayCounts(ymd) {
-            return daily[ymd] || [0, 0, 0];
+        // Extract counts from new object format (returns array of counts)
+        function getSoldCounts(ymd) {
+            const entry = daily[ymd];
+            if (!entry) return [0, 0, 0];
+            return entry.map(e => e.count || 0);
         }
 
-        function getWeightedFromCounts(c) {
-            return c[0]*config.weights[0] + c[1]*config.weights[1] + c[2]*config.weights[2];
+        function getConsumedCounts(ymd) {
+            const entry = daily_consumed[ymd];
+            if (!entry) return [0, 0, 0];
+            return entry.map(e => e.count || 0);
         }
 
-        function addCount(index) {
+        // Sum stored profit_delta values (immutable historical data)
+        function getDayProfit(ymd) {
+            const entry = daily[ymd];
+            if (!entry) return 0;
+            return entry.reduce((sum, e) => sum + (e.profit_delta || 0), 0);
+        }
+
+        // Sum stored inv_delta values from both sales and consumed
+        function getDayInventoryDelta(ymd) {
+            const saleEntry = daily[ymd];
+            const consumeEntry = daily_consumed[ymd];
+            let total = 0;
+            if (saleEntry) {
+                total += saleEntry.reduce((sum, e) => sum + (e.inv_delta || 0), 0);
+            }
+            if (consumeEntry) {
+                total += consumeEntry.reduce((sum, e) => sum + (e.inv_delta || 0), 0);
+            }
+            return total;
+        }
+
+        // Sum stored rev_delta values
+        function getDayRevenue(ymd) {
+            const entry = daily[ymd];
+            if (!entry) return 0;
+            return entry.reduce((sum, e) => sum + (e.rev_delta || 0), 0);
+        }
+
+        // COGS from sales only (not affected by consumption)
+        function getDayCOGSSold(ymd) {
+            const entry = daily[ymd];
+            if (!entry) return 0;
+            return entry.reduce((sum, e) => sum + (e.inv_delta || 0), 0);
+        }
+
+        // Cost of consumed items (stored as negative, return positive)
+        function getDayConsumedCost(ymd) {
+            const entry = daily_consumed[ymd];
+            if (!entry) return 0;
+            const total = entry.reduce((sum, e) => sum + (e.inv_delta || 0), 0); // negative
+            return Math.abs(total);
+        }
+
+        // Spendable profit = sales profit - consumption cost
+        function getDaySpendableProfit(ymd) {
+            return getDayProfit(ymd) - getDayConsumedCost(ymd);
+        }
+
+        function formatPoundsShort(pennies) {
+            const pounds = pennies / 100;
+            if (pounds === Math.floor(pounds)) return '£' + pounds;
+            return '£' + pounds.toFixed(2);
+        }
+
+        function addSale(index) {
             const today = getToday();
-            if (!daily[today]) daily[today] = [0, 0, 0];
-            daily[today][index]++;
-            undoStack.push({ date: today, index: index });
-            save();
+
+            // Calculate bottles used for this sale
+            const bottlesUsed = config.ml_per_tick[index] / BOTTLE_ML;
+
+            // Check if we have enough stock
+            if (config.stock_units < bottlesUsed) {
+                alert(`Not enough stock! Need ${bottlesUsed} bottles, have ${config.stock_units}`);
+                return;
+            }
+
+            // Initialize day entry if needed (new snapshot format)
+            if (!daily[today]) {
+                daily[today] = [
+                    { count: 0, profit_delta: 0, rev_delta: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, profit_delta: 0, rev_delta: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, profit_delta: 0, rev_delta: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() }
+                ];
+            }
+
+            // Capture snapshot at time of sale using current avg cost
+            const avgCost = getAvgCostPerBottle();
+            const costPerTick = Math.round(bottlesUsed * avgCost);
+            const profitPerTick = config.sale_prices[index] - costPerTick;
+            const revPerTick = config.sale_prices[index];
+
+            // Deduct from stock
+            const stockCostDeducted = Math.round(bottlesUsed * avgCost);
+            config.stock_units -= bottlesUsed;
+            config.stock_cost_total -= stockCostDeducted;
+
+            // Persist stock
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            // Update entry with snapshot deltas
+            daily[today][index].count++;
+            daily[today][index].profit_delta += profitPerTick;
+            daily[today][index].rev_delta += revPerTick;
+            daily[today][index].inv_delta += costPerTick;
+            daily[today][index].avg_cost_snapshot = avgCost;
+
+            // Store deltas in undo stack for accurate reversal
+            undoStack.push({
+                date: today,
+                index: index,
+                action: 'sell',
+                profit_delta: profitPerTick,
+                rev_delta: revPerTick,
+                inv_delta: costPerTick,
+                stock_units_delta: bottlesUsed,
+                stock_cost_delta: stockCostDeducted
+            });
+
+            saveData();
+            renderRollup();
+        }
+
+        // Restock: adds 1 bottle to stock at current avg cost (no revenue/profit/units impact)
+        function addRestock() {
+            const avgCost = getAvgCostPerBottle();
+
+            // If no stock exists, can't determine cost - use settings to add initial stock
+            if (config.stock_units === 0) {
+                alert('No stock to determine cost basis. Use Settings > Add Stock to add initial inventory.');
+                return;
+            }
+
+            // Add 1 bottle at avg cost (maintains average)
+            config.stock_units += 1;
+            config.stock_cost_total += Math.round(avgCost);
+
+            // Persist stock
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            // Store in undo stack
+            undoStack.push({
+                action: 'restock',
+                stock_units_delta: 1,
+                stock_cost_delta: Math.round(avgCost)
+            });
+
+            renderRollup();
+        }
+
+        function addConsume(index) {
+            if (config.types[index] !== 'sale') return;
+
+            // Calculate bottles used
+            const bottlesUsed = config.ml_per_tick[index] / BOTTLE_ML;
+
+            // Check if we have enough stock
+            if (config.stock_units < bottlesUsed) {
+                alert(`Not enough stock! Need ${bottlesUsed} bottles, have ${config.stock_units}`);
+                return;
+            }
+
+            const today = getToday();
+
+            // Initialize day entry if needed (new snapshot format)
+            if (!daily_consumed[today]) {
+                daily_consumed[today] = [
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() }
+                ];
+            }
+
+            // Capture snapshot at time of consume using avg cost
+            const avgCost = getAvgCostPerBottle();
+            const costPerTick = Math.round(bottlesUsed * avgCost);
+
+            // Deduct from stock
+            config.stock_units -= bottlesUsed;
+            config.stock_cost_total -= costPerTick;
+
+            // Persist stock
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            // Update entry with snapshot delta (negative for consumption)
+            daily_consumed[today][index].count++;
+            daily_consumed[today][index].inv_delta -= costPerTick;
+            daily_consumed[today][index].avg_cost_snapshot = avgCost;
+
+            // Store delta in undo stack for accurate reversal
+            undoStack.push({
+                date: today,
+                index: index,
+                action: 'drink',
+                inv_delta: -costPerTick,
+                stock_units_delta: bottlesUsed,
+                stock_cost_delta: costPerTick
+            });
+
+            saveData();
+            renderRollup();
+        }
+
+        // Consume a single bottle (generic consumption)
+        function consumeBottle() {
+            // Check if we have stock
+            if (config.stock_units < 1) {
+                alert('No stock to consume!');
+                return;
+            }
+
+            const today = getToday();
+
+            // Initialize day entry if needed
+            if (!daily_consumed[today]) {
+                daily_consumed[today] = [
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() },
+                    { count: 0, inv_delta: 0, avg_cost_snapshot: getAvgCostPerBottle() }
+                ];
+            }
+
+            // Capture snapshot at time of consume
+            const avgCost = getAvgCostPerBottle();
+            const costPerBottle = Math.round(avgCost);
+
+            // Deduct from stock
+            config.stock_units -= 1;
+            config.stock_cost_total -= costPerBottle;
+
+            // Persist stock
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            // Use index 1 (Single/bottle) for tracking
+            daily_consumed[today][1].count++;
+            daily_consumed[today][1].inv_delta -= costPerBottle;
+            daily_consumed[today][1].avg_cost_snapshot = avgCost;
+
+            // Store in undo stack
+            undoStack.push({
+                date: today,
+                index: 1,
+                action: 'consume',
+                inv_delta: -costPerBottle,
+                stock_units_delta: 1,
+                stock_cost_delta: costPerBottle
+            });
+
+            saveData();
             renderRollup();
         }
 
         function updateTarget(val) {
-            weeklyTarget = val === '' ? 0 : parseInt(val);
+            weeklyTarget = val === '' ? 0 : Math.round(parseFloat(val) * 100);
             localStorage.setItem('weeklyTarget', weeklyTarget);
             renderRollup();
         }
 
-        function save() {
+        function saveData() {
             localStorage.setItem('daily', JSON.stringify(daily));
+            localStorage.setItem('daily_consumed', JSON.stringify(daily_consumed));
         }
 
         function renderRollup() {
-            const keys = Object.keys(daily).sort().reverse();
+            const allDates = new Set([...Object.keys(daily), ...Object.keys(daily_consumed)]);
+            const keys = Array.from(allDates).sort().reverse();
+
+            const revenuePill = document.getElementById('revenuePill');
+            const profitPill = document.getElementById('profitPill');
+            const consumedPill = document.getElementById('consumedPill');
+            const stockPill = document.getElementById('stockPill');
+            const stockValuePill = document.getElementById('stockValuePill');
             const totalPill = document.getElementById('totalPill');
-            const weightedPill = document.getElementById('weightedPill');
             const content = document.getElementById('rollupContent');
             const metricsRow = document.getElementById('metricsRow');
             const weekStrip = document.getElementById('weekStrip');
 
-            // --- 1. Compute Totals (Global & Weighted) ---
-            let globalRawTotal = 0;
-            let currentViewWeightedTotal = 0; 
-            
+            let totalSpendableProfit = 0, totalRevenue = 0, totalUnits = 0, totalConsumedCost = 0;
+
             keys.forEach(date => {
-                const c = daily[date];
-                globalRawTotal += (c[0] + c[1] + c[2]);
-                currentViewWeightedTotal += getWeightedFromCounts(c);
+                const sold = getSoldCounts(date);
+                totalSpendableProfit += getDaySpendableProfit(date);
+                totalConsumedCost += getDayConsumedCost(date);
+                totalRevenue += getDayRevenue(date);
+                // Units = sales only (Ticker 1 + Ticker 2), not consumed or restock
+                totalUnits += sold[0] + sold[1];
             });
 
-            totalPill.textContent = "Total: " + globalRawTotal;
-            weightedPill.textContent = String(currentViewWeightedTotal);
+            revenuePill.textContent = "Revenue: " + formatPoundsShort(totalRevenue);
+            profitPill.textContent = "Profit: " + formatPoundsShort(totalSpendableProfit);
+            consumedPill.textContent = "Consumed: " + formatPoundsShort(totalConsumedCost);
+            stockPill.textContent = "Stock: " + config.stock_units;
+            stockValuePill.textContent = "Value: " + formatPoundsShort(config.stock_cost_total);
+            totalPill.textContent = "Units: " + totalUnits;
 
-
-            // --- 2. Compute Weekly Metrics (Current Week) & Draw Strip ---
             const now = new Date();
             const todayYMD = toLocalYMD(now);
             const mondayDate = getStartOfISOWeek(now);
-            const currentMonday = toLocalYMD(mondayDate);
-            const currentSunday = toLocalYMD(addDays(mondayDate, 6));
 
-            let weeklyWeightedSoFar = 0;
+            let weeklyProfitSoFar = 0;
             let stripHtml = '';
             const dailyAvg = weeklyTarget > 0 ? weeklyTarget / 7 : 0;
             const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-            // Loop 0..6 for Mon..Sun
             for (let i = 0; i < 7; i++) {
                 const dDate = addDays(mondayDate, i);
                 const dYMD = toLocalYMD(dDate);
-                const counts = getDayCounts(dYMD);
-                const weighted = getWeightedFromCounts(counts);
+                const daySpendable = getDaySpendableProfit(dYMD);
+                weeklyProfitSoFar += daySpendable;
 
-                // Add to weekly total if in loop (all these days are in current week)
-                weeklyWeightedSoFar += weighted;
-
-                // Determine Display Value
-                let displayVal = '0';
-                let boxClass = 'week-box';
-                
+                let displayVal = '0', boxClass = 'week-box';
                 if (dYMD === todayYMD) {
-                     boxClass += ' today';
-                     displayVal = String(weighted);
+                    boxClass += ' today';
+                    displayVal = formatPoundsShort(daySpendable);
                 } else if (dYMD > todayYMD) {
                     displayVal = '-';
-                     // Don't accumulate future "phantom" values if they existed, but
-                     // 'weighted' is calculated from data.
-                     // IMPORTANT: Logic 'weeklyWeightedSoFar' assumes table data is correct. 
-                     // If future data existed, it would count. But for display, show '-'.
-                     // Actually logic says "Show - ... regardless of existing data".
-                     // But for 'weeklyWeightedSoFar' used in KPI, we follow data. 
-                     // Usually future data = 0.
                 } else {
-                    // Past: Show weighted (which is 0 if no counts)
-                    displayVal = String(weighted);
+                    displayVal = formatPoundsShort(daySpendable);
                 }
 
-                // Tinting
                 if (weeklyTarget > 0 && dYMD <= todayYMD) {
-                    if (weighted > dailyAvg) boxClass += ' wb-pos';
-                    else if (weighted < dailyAvg) boxClass += ' wb-neg';
+                    if (daySpendable > dailyAvg) boxClass += ' wb-pos';
+                    else if (daySpendable < dailyAvg) boxClass += ' wb-neg';
                 }
 
-                stripHtml += `
-                    <div class="${boxClass}">
-                        <div class="week-day">${dayLabels[i]}</div>
-                        <div class="week-val">${displayVal}</div>
-                    </div>
-                `;
+                stripHtml += `<div class="${boxClass}"><div class="week-day">${dayLabels[i]}</div><div class="week-val">${displayVal}</div></div>`;
             }
             weekStrip.innerHTML = stripHtml;
 
-            // Correct weeklyWeightedSoFar:
-            // The directive says "weeklyWeightedSoFar = sum of weighted totals for each day in current week.".
-            // My loop above does exactly that based on daily data.
-            
-            // ISO day index (1=Mon ... 7=Sun).
-            const dayOfWeekIndex = (now.getDay() + 6) % 7 + 1;
-            
+            // day_index: Mon=0, Tue=1, ..., Sun=6
+            const dayIndex = (now.getDay() + 6) % 7;
+
             if (weeklyTarget > 0) {
                 metricsRow.classList.remove('hidden');
-                
-                const expectedByNow = weeklyTarget * (dayOfWeekIndex / 7);
-                const deltaNow = weeklyWeightedSoFar - expectedByNow;
-                const remainingDays = 7 - dayOfWeekIndex;
-                const neededPerDay = remainingDays > 0 ? (weeklyTarget - weeklyWeightedSoFar) / remainingDays : 0;
 
-                // Render Tiles
+                // Check if today has any data (sales or consumption)
+                const todayHasData = (daily[todayYMD] && daily[todayYMD].some(e => e.count > 0)) ||
+                                     (daily_consumed[todayYMD] && daily_consumed[todayYMD].some(e => e.count > 0));
+
+                // If no data today, only count completed days (exclude today)
+                // If data today, include today in expected
+                const daysToCount = todayHasData ? (dayIndex + 1) : dayIndex;
+                const expectedByNow = weeklyTarget * (daysToCount / 7);
+                const deltaNow = weeklyProfitSoFar - expectedByNow;
+
+                // Remaining days calculation
+                const remainingDays = todayHasData ? (6 - dayIndex) : (7 - dayIndex);
+                const neededPerDay = remainingDays > 0 ? (weeklyTarget - weeklyProfitSoFar) / remainingDays : 0;
+
                 metricsRow.innerHTML = `
-                    <div class="metric-tile">
-                        <span class="metric-val">${weeklyWeightedSoFar}</span>
-                        <span class="metric-label">Wk Total</span>
-                    </div>
-                    <div class="metric-tile">
-                        <span class="metric-val ${deltaNow < 0 ? 'metric-neg' : 'metric-pos'}">${deltaNow > 0 ? '+' : ''}${Math.round(deltaNow)}</span>
-                        <span class="metric-label">Gap</span>
-                    </div>
-                     <div class="metric-tile">
-                        <span class="metric-val">${Math.round(dailyAvg)}</span>
-                        <span class="metric-label">Avg/Day</span>
-                    </div>
-                     <div class="metric-tile">
-                        <span class="metric-val">${remainingDays > 0 ? Math.round(neededPerDay) : '—'}</span>
-                        <span class="metric-label">Need</span>
-                    </div>
+                    <div class="metric-tile"><span class="metric-val">${formatPoundsShort(weeklyProfitSoFar)}</span><span class="metric-label">Wk Profit</span></div>
+                    <div class="metric-tile"><span class="metric-val ${deltaNow < 0 ? 'metric-neg' : 'metric-pos'}">${deltaNow > 0 ? '+' : ''}${formatPoundsShort(Math.round(deltaNow))}</span><span class="metric-label">Gap</span></div>
+                    <div class="metric-tile"><span class="metric-val">${formatPoundsShort(Math.round(dailyAvg))}</span><span class="metric-label">Avg/Day</span></div>
+                    <div class="metric-tile"><span class="metric-val">${remainingDays > 0 ? formatPoundsShort(Math.round(neededPerDay)) : '—'}</span><span class="metric-label">Need</span></div>
                 `;
             } else {
                 metricsRow.classList.add('hidden');
             }
 
-
-            // --- 3. Render Table ---
             if (keys.length === 0) {
                 content.textContent = "No data yet.";
                 return;
             }
 
-            let html = `<table><tr><th>Date</th><th>${config.names[0]}</th><th>${config.names[1]}</th><th>${config.names[2]}</th><th>Total</th>`;
-            if (weeklyTarget > 0) html += `<th>±</th>`;
-            html += `</tr>`;
+            let html = `<table><tr>
+                <th>Date</th>
+                <th>${config.names[0]}</th>
+                <th>${config.names[1]}</th>
+                <th>Profit</th>
+                <th>COGS</th>
+                <th>Consumed</th>
+                <th>Rev</th>
+            </tr>`;
 
-            const rows = keys.map(date => {
-                const c = daily[date];
-                const rawTotal = c[0] + c[1] + c[2];
-                const weighted = getWeightedFromCounts(c);
-                
-                let deltaCell = '';
+            keys.forEach(date => {
+                const sold = getSoldCounts(date);
+                const daySpendable = getDaySpendableProfit(date);
+                const dayCOGS = getDayCOGSSold(date);
+                const dayConsumed = getDayConsumedCost(date);
+                const dayRevenue = getDayRevenue(date);
+
                 let rowClass = '';
-
                 if (weeklyTarget > 0) {
-                    const delta = weighted - dailyAvg;
-                    const sign = delta > 0 ? '+' : '';
-                    const rDelta = Math.round(delta);
-                    deltaCell = `<td class="delta-cell">${sign}${rDelta}</td>`;
-                    
-                    if (Math.round(delta) > 0) rowClass = 'row-pos';
-                    else if (Math.round(delta) < 0) rowClass = 'row-neg';
+                    if (daySpendable > dailyAvg) rowClass = 'row-pos';
+                    else if (daySpendable < dailyAvg && daySpendable > 0) rowClass = 'row-neg';
                 }
 
-                // Date Formatting: e.g. Thu 15 Jan
-                // date is YYYY-MM-DD
-                const dateObj = new Date(date); 
-                // Note: new Date("2025-01-15") is UTC. 
-                // We want to avoid timezone shifts. 
-                // Better to simple parse YMD parts and construct local date if needed for formatDayLabel
-                // OR use a safe way.
-                // formatDayLabel uses dateObj. Assuming inputs are local dates (as per prompts).
-                // Let's create a local date from the YYYY-MM-DD string to be safe.
                 const [y, m, d] = date.split('-').map(Number);
                 const localDate = new Date(y, m - 1, d);
                 const dateLabel = formatDayLabel(localDate);
 
-                return `<tr class="${rowClass}">
+                html += `<tr class="${rowClass}">
                     <td>${dateLabel}</td>
-                    <td>${c[0]}</td>
-                    <td>${c[1]}</td>
-                    <td>${c[2]}</td>
-                    <td>${rawTotal}</td>
-                    ${deltaCell}
+                    <td>${sold[0] || '-'}</td>
+                    <td>${sold[1] || '-'}</td>
+                    <td class="delta-cell">${formatPoundsShort(daySpendable)}</td>
+                    <td>${formatPoundsShort(dayCOGS)}</td>
+                    <td>${formatPoundsShort(dayConsumed)}</td>
+                    <td>${formatPoundsShort(dayRevenue)}</td>
                 </tr>`;
             });
 
-            html += rows.join('');
             html += `</table>`;
-            
             content.innerHTML = html;
         }
 
