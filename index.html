@@ -521,19 +521,46 @@
         function setupSettingsButton() {
             const btn = document.getElementById('settingsBtn');
             let touched = false;
+            let touchResetTimer = null;
+
+            const openFromTouch = () => {
+                touched = true;
+                openSettings();
+
+                if (touchResetTimer) {
+                    clearTimeout(touchResetTimer);
+                }
+                touchResetTimer = setTimeout(() => {
+                    touched = false;
+                    touchResetTimer = null;
+                }, 400);
+            };
 
             btn.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                touched = true;
-                openSettings();
+                if (!touched) {
+                    openFromTouch();
+                }
             }, { passive: false });
 
-            btn.addEventListener('click', (e) => {
-                // Only handle click if not already handled by touch
+            btn.addEventListener('pointerup', (e) => {
+                if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+                    e.preventDefault();
+                    if (!touched) {
+                        openFromTouch();
+                    }
+                }
+            });
+
+            btn.addEventListener('click', () => {
                 if (!touched) {
                     openSettings();
                 }
                 touched = false;
+                if (touchResetTimer) {
+                    clearTimeout(touchResetTimer);
+                    touchResetTimer = null;
+                }
             });
         }
 
