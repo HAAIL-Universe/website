@@ -94,6 +94,15 @@
         .row-neg { background-color: var(--neg-bg); }
         .hidden { display: none; }
 
+        /* Week grouping for historical rows */
+        .week-group { margin-bottom: 10px; }
+        .week-group-header { display:flex; justify-content:space-between; align-items:center; padding:10px; background: var(--bg-light); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-weight:700; }
+        .week-group-body { margin-top: 6px; }
+        .week-group.collapsed .week-group-body { display:none; }
+        .week-group .chev { opacity:0.6; transition: transform 0.12s ease; }
+        .week-group.collapsed .chev { transform: rotate(0deg); }
+        .week-group:not(.collapsed) .chev { transform: rotate(90deg); }
+
         /* Settings Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
         .modal-overlay.open { display: flex; }
@@ -171,6 +180,8 @@
             <div id="consumedPill" class="pill pill-consumed">Consumed: £0</div>
             <div id="stockPill" class="pill pill-inventory">Stock: 0</div>
             <div id="stockValuePill" class="pill pill-stock-value">Value: £0</div>
+            <div id="breakagePill" class="pill pill-consumed">Breakage: £0</div>
+            <div id="potentialPill" class="pill pill-profit">Potential: £0–£0</div>
         </div>
 
         <div class="header-row">
@@ -217,6 +228,12 @@
                 </div>
                 <div class="derived-info" id="costPerMlDisplay"></div>
                 <div class="derived-info" id="currentStockDisplay" style="margin-top: 4px;"></div>
+                <div class="batch-row" style="margin-top:8px;">
+                    <input type="number" id="restateQty" placeholder="count" step="0.01">
+                    <span class="batch-label">Restate Quantity</span>
+                    <button class="btn-update" onclick="restateQuantity()">Restate</button>
+                </div>
+                <div class="derived-info">Restate sets stock to your counted amount; any reduction is logged as Breakage.</div>
             </div>
 
             <!-- Ticker Rows -->
@@ -268,6 +285,7 @@
         // Data model - all money in PENNIES
         let daily = JSON.parse(localStorage.getItem('daily')) || {};
         let daily_consumed = JSON.parse(localStorage.getItem('daily_consumed')) || {};
+        let daily_breakage = JSON.parse(localStorage.getItem('daily_breakage')) || {};
         let weeklyTarget = parseInt(localStorage.getItem('weeklyTarget')) || 0;
         let undoStack = [];
 
@@ -567,12 +585,14 @@
         // Last batch values (persisted)
         let lastBatchBottles = parseInt(localStorage.getItem('lastBatchBottles')) || '';
         let lastBatchCost = parseFloat(localStorage.getItem('lastBatchCost')) || '';
+        let lastRestateQty = parseFloat(localStorage.getItem('lastRestateQty')) || '';
 
         // --- Settings ---
         function openSettings() {
             // Restore last batch inputs
             document.getElementById('batchBottles').value = lastBatchBottles || '';
             document.getElementById('batchCost').value = lastBatchCost ? lastBatchCost.toFixed(2) : '';
+            document.getElementById('restateQty').value = lastRestateQty || '';
 
             // Row 1
             document.getElementById('name0').value = config.names[0];
@@ -667,6 +687,72 @@
             updateCostDisplay();
         }
 
+        // Restate quantity: user-provided stock count, log any reduction as breakage
+        function restateQuantity() {
+            const val = document.getElementById('restateQty').value;
+            const newQty = parseFloat(val);
+            if (isNaN(newQty)) {
+                alert('Enter a valid number for restate quantity.');
+                return;
+            }
+            if (newQty < 0) {
+                alert('Quantity cannot be negative.');
+                return;
+            }
+
+            if (config.stock_units === 0 && config.stock_cost_total === 0 && newQty > 0) {
+                if (!confirm('No cost basis exists. Add stock first so cost basis exists. Continue?')) {
+                    return;
+                }
+            }
+
+            const avgCost = getAvgCostPerBottle();
+            const oldUnits = config.stock_units;
+            const oldCostTotal = config.stock_cost_total;
+
+            const newCostTotal = Math.round(newQty * avgCost);
+            const lossCost = oldCostTotal - newCostTotal;
+
+            config.stock_units = newQty;
+            config.stock_cost_total = newCostTotal;
+
+            localStorage.setItem('stock_units', config.stock_units);
+            localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+            const today = getToday();
+            let unitsLost = 0;
+            if (lossCost > 0) {
+                if (!daily_breakage[today]) {
+                    daily_breakage[today] = { inv_delta: 0, units_lost: 0, avg_cost_snapshot: avgCost };
+                }
+                daily_breakage[today].inv_delta -= lossCost;
+                unitsLost = oldUnits - newQty;
+                daily_breakage[today].units_lost += unitsLost;
+                daily_breakage[today].avg_cost_snapshot = avgCost;
+                localStorage.setItem('daily_breakage', JSON.stringify(daily_breakage));
+            }
+
+            // Persist last restate
+            lastRestateQty = newQty;
+            localStorage.setItem('lastRestateQty', lastRestateQty);
+
+            // Push undo entry
+            undoStack.push({
+                action: 'restate',
+                date: today,
+                oldUnits: oldUnits,
+                oldCostTotal: oldCostTotal,
+                newUnits: newQty,
+                newCostTotal: newCostTotal,
+                lossCost: lossCost > 0 ? lossCost : 0,
+                unitsLost: unitsLost
+            });
+
+            saveData();
+            renderRollup();
+            updateCostDisplay();
+        }
+
         function closeSettings() {
             document.getElementById('settingsModal').classList.remove('open');
         }
@@ -755,6 +841,28 @@
                 config.stock_cost_total -= action.stock_cost_delta;
                 localStorage.setItem('stock_units', config.stock_units);
                 localStorage.setItem('stock_cost_total', config.stock_cost_total);
+            } else if (action.action === 'restate') {
+                // Restore previous stock values
+                const date = action.date;
+                config.stock_units = action.oldUnits;
+                config.stock_cost_total = action.oldCostTotal;
+                localStorage.setItem('stock_units', config.stock_units);
+                localStorage.setItem('stock_cost_total', config.stock_cost_total);
+
+                // Revert breakage entry if loss was recorded
+                if (action.lossCost && action.lossCost > 0) {
+                    if (daily_breakage[date]) {
+                        daily_breakage[date].inv_delta += action.lossCost;
+                        daily_breakage[date].units_lost -= action.unitsLost || 0;
+                        // Clean up empty entry
+                        const inv = daily_breakage[date].inv_delta || 0;
+                        const units = daily_breakage[date].units_lost || 0;
+                        if (inv === 0 && (!units || units === 0)) {
+                            delete daily_breakage[date];
+                        }
+                        localStorage.setItem('daily_breakage', JSON.stringify(daily_breakage));
+                    }
+                }
             }
 
             renderRollup();
@@ -766,6 +874,7 @@
                 // Reset all runtime state
                 daily = {};
                 daily_consumed = {};
+                daily_breakage = {};
                 undoStack = [];
 
                 // Reset stock
@@ -775,6 +884,7 @@
                 // Clear localStorage (preserve weeklyTarget and settings)
                 localStorage.removeItem('daily');
                 localStorage.removeItem('daily_consumed');
+                localStorage.removeItem('daily_breakage');
                 localStorage.removeItem('stock_units');
                 localStorage.removeItem('stock_cost_total');
 
@@ -884,9 +994,17 @@
             return Math.abs(total);
         }
 
-        // Spendable profit = sales profit - consumption cost
+        // Breakage cost recorded similarly to consumption (stored negative, return positive)
+        function getDayBreakageCost(ymd) {
+            const entry = daily_breakage[ymd];
+            if (!entry) return 0;
+            const total = entry.inv_delta || 0; // negative
+            return Math.abs(total);
+        }
+
+        // Spendable profit = sales profit - consumption cost - breakage cost
         function getDaySpendableProfit(ymd) {
-            return getDayProfit(ymd) - getDayConsumedCost(ymd);
+            return getDayProfit(ymd) - getDayConsumedCost(ymd) - getDayBreakageCost(ymd);
         }
 
         function formatPoundsShort(pennies) {
@@ -1095,28 +1213,32 @@
         function saveData() {
             localStorage.setItem('daily', JSON.stringify(daily));
             localStorage.setItem('daily_consumed', JSON.stringify(daily_consumed));
+            localStorage.setItem('daily_breakage', JSON.stringify(daily_breakage));
         }
 
         function renderRollup() {
-            const allDates = new Set([...Object.keys(daily), ...Object.keys(daily_consumed)]);
+            const allDates = new Set([...Object.keys(daily), ...Object.keys(daily_consumed), ...Object.keys(daily_breakage)]);
             const keys = Array.from(allDates).sort().reverse();
 
             const revenuePill = document.getElementById('revenuePill');
             const profitPill = document.getElementById('profitPill');
             const consumedPill = document.getElementById('consumedPill');
+            const breakagePill = document.getElementById('breakagePill');
             const stockPill = document.getElementById('stockPill');
             const stockValuePill = document.getElementById('stockValuePill');
+            const potentialPill = document.getElementById('potentialPill');
             const totalPill = document.getElementById('totalPill');
             const content = document.getElementById('rollupContent');
             const metricsRow = document.getElementById('metricsRow');
             const weekStrip = document.getElementById('weekStrip');
 
-            let totalSpendableProfit = 0, totalRevenue = 0, totalUnits = 0, totalConsumedCost = 0;
+            let totalSpendableProfit = 0, totalRevenue = 0, totalUnits = 0, totalConsumedCost = 0, totalBreakageCost = 0;
 
             keys.forEach(date => {
                 const sold = getSoldCounts(date);
                 totalSpendableProfit += getDaySpendableProfit(date);
                 totalConsumedCost += getDayConsumedCost(date);
+                totalBreakageCost += getDayBreakageCost(date);
                 totalRevenue += getDayRevenue(date);
                 // Units = sales only (Ticker 1 + Ticker 2), not consumed or restock
                 totalUnits += sold[0] + sold[1];
@@ -1125,12 +1247,34 @@
             revenuePill.textContent = "Revenue: " + formatPoundsShort(totalRevenue);
             profitPill.textContent = "Profit: " + formatPoundsShort(totalSpendableProfit);
             consumedPill.textContent = "Consumed: " + formatPoundsShort(totalConsumedCost);
+            breakagePill.textContent = "Breakage: " + formatPoundsShort(totalBreakageCost);
             stockPill.textContent = "Stock: " + config.stock_units;
             stockValuePill.textContent = "Value: " + formatPoundsShort(config.stock_cost_total);
             totalPill.textContent = "Units: " + totalUnits;
 
+            // Potential profit min-max
+            const avgCost = getAvgCostPerBottle();
+            const potentials = [];
+            [0,1].forEach(i => {
+                if (config.types[i] === 'sale' && config.sale_prices[i] > 0 && config.ml_per_tick[i] > 0) {
+                    const bottlesPerTick = config.ml_per_tick[i] / BOTTLE_ML;
+                    const ticksPossible = bottlesPerTick > 0 ? Math.floor(config.stock_units / bottlesPerTick) : 0;
+                    const profitPerTick = config.sale_prices[i] - Math.round(bottlesPerTick * avgCost);
+                    const totalProfit = ticksPossible * profitPerTick;
+                    potentials.push(totalProfit);
+                }
+            });
+            if (potentials.length === 0 || config.stock_units <= 0) {
+                potentialPill.textContent = "Potential: £0–£0";
+            } else {
+                const minP = Math.min(...potentials);
+                const maxP = Math.max(...potentials);
+                potentialPill.textContent = `Potential: ${formatPoundsShort(minP)}–${formatPoundsShort(maxP)}`;
+            }
+
             const now = new Date();
             const todayYMD = toLocalYMD(now);
+            const currentWeekStart = toLocalYMD(getStartOfISOWeek(now));
             const mondayDate = getStartOfISOWeek(now);
 
             let weeklyProfitSoFar = 0;
@@ -1163,23 +1307,16 @@
             }
             weekStrip.innerHTML = stripHtml;
 
-            // day_index: Mon=0, Tue=1, ..., Sun=6
+            // metrics row
             const dayIndex = (now.getDay() + 6) % 7;
-
             if (weeklyTarget > 0) {
                 metricsRow.classList.remove('hidden');
-
-                // Check if today has any data (sales or consumption)
                 const todayHasData = (daily[todayYMD] && daily[todayYMD].some(e => e.count > 0)) ||
-                                     (daily_consumed[todayYMD] && daily_consumed[todayYMD].some(e => e.count > 0));
-
-                // If no data today, only count completed days (exclude today)
-                // If data today, include today in expected
+                                     (daily_consumed[todayYMD] && daily_consumed[todayYMD].some(e => e.count > 0)) ||
+                                     (daily_breakage[todayYMD] && (daily_breakage[todayYMD].inv_delta || daily_breakage[todayYMD].units_lost));
                 const daysToCount = todayHasData ? (dayIndex + 1) : dayIndex;
                 const expectedByNow = weeklyTarget * (daysToCount / 7);
                 const deltaNow = weeklyProfitSoFar - expectedByNow;
-
-                // Remaining days calculation
                 const remainingDays = todayHasData ? (6 - dayIndex) : (7 - dayIndex);
                 const neededPerDay = remainingDays > 0 ? (weeklyTarget - weeklyProfitSoFar) / remainingDays : 0;
 
@@ -1198,46 +1335,61 @@
                 return;
             }
 
-            let html = `<table><tr>
-                <th>Date</th>
-                <th>${config.names[0]}</th>
-                <th>${config.names[1]}</th>
-                <th>Profit</th>
-                <th>COGS</th>
-                <th>Consumed</th>
-                <th>Rev</th>
-            </tr>`;
-
+            // Group dates by ISO week start
+            const weeks = {};
             keys.forEach(date => {
-                const sold = getSoldCounts(date);
-                const daySpendable = getDaySpendableProfit(date);
-                const dayCOGS = getDayCOGSSold(date);
-                const dayConsumed = getDayConsumedCost(date);
-                const dayRevenue = getDayRevenue(date);
-
-                let rowClass = '';
-                if (weeklyTarget > 0) {
-                    if (daySpendable > dailyAvg) rowClass = 'row-pos';
-                    else if (daySpendable < dailyAvg && daySpendable > 0) rowClass = 'row-neg';
-                }
-
                 const [y, m, d] = date.split('-').map(Number);
                 const localDate = new Date(y, m - 1, d);
-                const dateLabel = formatDayLabel(localDate);
-
-                html += `<tr class="${rowClass}">
-                    <td>${dateLabel}</td>
-                    <td>${sold[0] || '-'}</td>
-                    <td>${sold[1] || '-'}</td>
-                    <td class="delta-cell">${formatPoundsShort(daySpendable)}</td>
-                    <td>${formatPoundsShort(dayCOGS)}</td>
-                    <td>${formatPoundsShort(dayConsumed)}</td>
-                    <td>${formatPoundsShort(dayRevenue)}</td>
-                </tr>`;
+                const weekStart = toLocalYMD(getStartOfISOWeek(localDate));
+                if (!weeks[weekStart]) weeks[weekStart] = [];
+                weeks[weekStart].push(date);
             });
 
-            html += `</table>`;
-            content.innerHTML = html;
+            const weekKeys = Object.keys(weeks).sort().reverse();
+            let out = '';
+
+            weekKeys.forEach(weekStart => {
+                const dates = weeks[weekStart].sort().reverse();
+                const headerLabel = new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(weekStart));
+                const collapsed = weekStart === currentWeekStart ? '' : 'collapsed';
+
+                out += `<div class="week-group ${collapsed}" data-week="${weekStart}">`;
+                out += `<div class="week-group-header">Week of ${headerLabel}<span class="chev">▸</span></div>`;
+                out += `<div class="week-group-body"><table><tr><th>Date</th><th>${config.names[0]}</th><th>${config.names[1]}</th><th>Profit</th><th>COGS</th><th>Consumed</th><th>Breakage</th><th>Rev</th></tr>`;
+
+                dates.forEach(date => {
+                    const sold = getSoldCounts(date);
+                    const daySpendable = getDaySpendableProfit(date);
+                    const dayCOGS = getDayCOGSSold(date);
+                    const dayConsumed = getDayConsumedCost(date);
+                    const dayBreakage = getDayBreakageCost(date);
+                    const dayRevenue = getDayRevenue(date);
+
+                    let rowClass = '';
+                    if (weeklyTarget > 0) {
+                        if (daySpendable > dailyAvg) rowClass = 'row-pos';
+                        else if (daySpendable < dailyAvg && daySpendable > 0) rowClass = 'row-neg';
+                    }
+
+                    const [y, m, d] = date.split('-').map(Number);
+                    const localDate = new Date(y, m - 1, d);
+                    const dateLabel = formatDayLabel(localDate);
+
+                    out += `<tr class="${rowClass}"><td>${dateLabel}</td><td>${sold[0] || '-'}</td><td>${sold[1] || '-'}</td><td class="delta-cell">${formatPoundsShort(daySpendable)}</td><td>${formatPoundsShort(dayCOGS)}</td><td>${formatPoundsShort(dayConsumed)}</td><td>${formatPoundsShort(dayBreakage)}</td><td>${formatPoundsShort(dayRevenue)}</td></tr>`;
+                });
+
+                out += `</table></div></div>`;
+            });
+
+            content.innerHTML = out;
+
+            // Attach collapse handlers
+            document.querySelectorAll('.week-group-header').forEach(h => {
+                h.addEventListener('click', (e) => {
+                    const parent = h.parentElement;
+                    parent.classList.toggle('collapsed');
+                });
+            });
         }
 
         renderRollup();
